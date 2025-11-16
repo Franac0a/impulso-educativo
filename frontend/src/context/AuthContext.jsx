@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authService } from "../services/auth.service";
-// ⚠️ Nota: No usaremos userService en esta prueba
-// import { userService } from '../services/user.service';
+import { userService } from "../services/user.service";
 
 const AuthContext = createContext();
 
@@ -9,42 +8,46 @@ export const useAuth = () => {
   return useContext(AuthContext);
 };
 
+// ⚠️ Esta es la función que verifica la sesión (la usaremos en el login)
+const checkAuthStatus = async () => {
+  try {
+    const response = await userService.getProfile();
+    if (response.perfil) {
+      return response.perfil; // Devuelve el perfil completo
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  // ⚠️ CAMBIO: Inicia en 'false' para forzar la carga
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  /*
-  // ⚠️ CAMBIO: Hemos comentado el useEffect que verifica la sesión.
-  // Esta es la causa más probable de la pantalla en blanco.
-  
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await userService.getProfile();
-        if (response.perfil) {
-          setUser(response.perfil);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
+    // 1. Al cargar la app, verificamos la sesión
+    const loadUser = async () => {
+      const userProfile = await checkAuthStatus();
+      setUser(userProfile);
+      setLoading(false);
     };
+    loadUser();
+  }, []);
 
-    checkAuthStatus();
-  }, []); 
-  */
-
-  // --- (Las funciones de login/register/logout no cambian) ---
+  // --- ⚠️ ¡AQUÍ ESTÁ EL ARREGLO! ---
 
   const login = async (email, password) => {
     try {
-      const response = await authService.login(email, password);
-      setUser(response.user);
-      return response.user;
+      // 1. Llama a la API de login (esto setea la cookie)
+      await authService.login(email, password);
+
+      // 2. Ahora que la cookie existe, obtenemos el perfil completo
+      const userProfile = await checkAuthStatus();
+
+      // 3. ¡Seteamos el usuario COMPLETO (con .name)!
+      setUser(userProfile);
+      return userProfile;
     } catch (error) {
       setUser(null);
       throw error;
@@ -53,13 +56,18 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await authService.register(userData);
-      setUser(response.usuario);
-      return response.usuario;
+      // 1. Llama a la API de registro
+      await authService.register(userData);
+
+      // 2. Llama a NUESTRA función de login (la de arriba)
+      // que se encarga de setear la cookie y el perfil
+      return await login(userData.email, userData.password);
     } catch (error) {
       throw error;
     }
   };
+
+  // ------------------------------------
 
   const logout = async () => {
     await authService.logout();
@@ -70,7 +78,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     login,
-    register,
+    register, // 👈 Usaremos esta en el formulario
     logout,
     isAuthenticated: !!user,
     userType: user ? user.type : null,
@@ -78,9 +86,6 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {/* Ahora '!loading' siempre será 'true' (porque lo seteamos en false)
-        y la app SE DEBE mostrar.
-      */}
       {!loading && children}
     </AuthContext.Provider>
   );

@@ -14,7 +14,15 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// app.js (Backend)
+
+// Configuración de CORS específica
+app.use(
+  cors({
+    origin: "http://localhost:5173", // 1. Permite ESE origen
+    credentials: true, // 2. Permite que el frontend envíe cookies
+  })
+);
 
 // Middlewares globales
 app.use(express.json());

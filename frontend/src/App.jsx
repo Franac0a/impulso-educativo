@@ -1,44 +1,70 @@
-// src/App.jsx
 import React from "react";
 import { Routes, Route } from "react-router";
-import { ProtectedRoute } from "./components/ProtectedRoute";
 
-// Importaciones de Páginas
+// Componentes de Ruteo
+import { PrivateRoutes } from "./router/PrivateRoutes";
+import { PublicRoutes } from "./router/PublicRoutes";
+import { Navbar } from "./components/Navbar";
+// ⚠️ 1. IMPORTAMOS EL FOOTER
+import { Footer } from "./components/Footer";
+
+// Páginas
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { CareerListPage } from "./pages/CareerListPage";
+// ⚠️ 2. IMPORTAMOS LA PÁGINA DE CONTACTO (usando tu archivo)
+import { ContactPage } from "./pages/ContactPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { MyCareersPage } from "./pages/MyCareersPage";
-
-// ⚠️ ¡NUEVA IMPORTACIÓN!
-import { Navbar } from "./components/Navbar";
 
 export const App = () => {
   return (
     <>
-      {" "}
-      {/* Fragment para envolver la Navbar y las Rutas */}
       <Navbar />
-      {/* Este div añade un padding superior para que el contenido no quede debajo de la Navbar fija */}
-      <div className="pt-20">
-        {" "}
-        {/* Ajusta 'pt-20' (padding-top: 5rem) según la altura de tu Navbar */}
-        <Routes>
-          {/* Rutas Públicas */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/carreras" element={<CareerListPage />} />
 
-          {/* Rutas Protegidas (Estudiante/Cualquiera logueado) */}
-          <Route element={<ProtectedRoute />}>
+      {/* El 'pt-20' (padding-top) evita que el contenido
+          quede tapado por la Navbar fija */}
+      <div className="pt-20">
+        <Routes>
+          {/* ------------------- */}
+          {/* --- RUTAS PÚBLICAS (Para todos) --- */}
+          {/* ------------------- */}
+          <Route path="/" element={<HomePage />} />
+          {/* ⚠️ 3. AÑADIMOS LA RUTA DE CONTACTO */}
+          <Route path="/contacto" element={<ContactPage />} />
+
+          {/* ------------------- */}
+          {/* --- RUTAS PÚBLICAS (Solo invitados) --- */}
+          {/* ------------------- */}
+          <Route element={<PublicRoutes />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+
+          {/* ------------------- */}
+          {/* --- RUTAS PRIVADAS (Cualquier logueado) --- */}
+          {/* ------------------- */}
+          {/* Moví /carreras de "estudiante" a aquí,
+            basado en tu código anterior. Si solo "estudiante"
+            puede verla, movela adentro de esa ruta.
+          */}
+          <Route element={<PrivateRoutes />}>
+            <Route path="/carreras" element={<CareerListPage />} />
+          </Route>
+
+          {/* ------------------- */}
+          {/* --- RUTAS PRIVADAS (Estudiantes) --- */}
+          {/* ------------------- */}
+          <Route element={<PrivateRoutes allowedRole="estudiante" />}>
             <Route path="/perfil" element={<h1>Mi Perfil (Estudiante)</h1>} />
             <Route path="/test-vocacional" element={<h1>Test Vocacional</h1>} />
           </Route>
 
-          {/* Rutas de Rol "universidad" */}
-          <Route element={<ProtectedRoute allowedRole="universidad" />}>
+          {/* ------------------- */}
+          {/* --- RUTAS PRIVADAS (Universidades) --- */}
+          {/* ------------------- */}
+          <Route element={<PrivateRoutes allowedRole="universidad" />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/dashboard/mis-carreras" element={<MyCareersPage />} />
             <Route
@@ -51,6 +77,9 @@ export const App = () => {
           <Route path="*" element={<h1>404: Página No Encontrada</h1>} />
         </Routes>
       </div>
+
+      {/* ⚠️ 4. AÑADIMOS EL FOOTER AL FINAL */}
+      <Footer />
     </>
   );
 };
