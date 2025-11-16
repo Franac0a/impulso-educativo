@@ -1,9 +1,12 @@
+// Cargar relaciones (muy importante)
+import "../src/models/index.js";
+
 // --- Importaciones ---
-import { sequelize } from "./src/config/database.js";
-import { UniversidadModel } from "./src/models/universidades.model.js";
-import { CarreraModel } from "./src/models/carreras.model.js";
-import { UserModel } from "./src/models/user.model.js";
-import { InscripcionModel } from "./src/models/inscripcion.model.js";
+import { sequelize } from "../src/config/database.js";
+import { UniversidadModel } from "../src/models/universidades.model.js";
+import { CarreraModel } from "../src/models/carreras.model.js";
+import { UserModel } from "../src/models/user.model.js";
+import { InscripcionModel } from "../src/models/inscripcion.model.js";
 
 // --- Datos de Ejemplo ---
 
@@ -63,7 +66,7 @@ const sembrarDatos = async () => {
     // Sincronizar BD (¡CON force: true BORRA TODO!)
     console.log("Sincronizando base de datos... (force: true)");
     // ¡¡IMPORTANTE!! Descomentado para aplicar cambios en la estructura de la tabla
-    // await sequelize.sync({ force: true });
+    // await sequelize.sync({ force: true });                                              DESCOMENTAR PARA PODER CARGAR BIEN TODA LA INFORMACION DE LAS UNIVERSIDADES
     // Por favor, recuerda volver a comentarlo después de la ejecución exitosa
     console.log("¡Tablas borradas y recreadas con la nueva estructura!");
 
