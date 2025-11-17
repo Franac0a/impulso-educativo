@@ -3,10 +3,11 @@ import { UniversidadModel } from "../models/universidades.model.js";
 import { Op } from "sequelize";
 
 // --- LÓGICA PARA EL PANEL DE ADMIN ---
+// (Estas funciones no se modifican, la universidad
+// debe poder gestionar sus carreras sin estar verificada)
 
 /**
  * CREAR UNA NUEVA CARRERA
- * Vinculada a la institución del usuario logueado.
  */
 export const crearCarrera = async (req, res) => {
   try {
@@ -65,7 +66,6 @@ export const crearCarrera = async (req, res) => {
 
 /**
  * OBTENER "MIS CARRERAS"
- * Trae solo las carreras de la institución del usuario logueado.
  */
 export const obtenerCarrerasDeUniversidad = async (req, res) => {
   try {
@@ -99,7 +99,6 @@ export const obtenerCarrerasDeUniversidad = async (req, res) => {
 
 /**
  * EDITAR UNA CARRERA
- * Verifica que la carrera pertenezca al usuario logueado.
  */
 export const editarCarrera = async (req, res) => {
   try {
@@ -134,7 +133,6 @@ export const editarCarrera = async (req, res) => {
 
 /**
  * ELIMINAR UNA CARRERA
- * Verifica que la carrera pertenezca al usuario logueado.
  */
 export const eliminarCarrera = async (req, res) => {
   try {
@@ -188,6 +186,17 @@ export const obtenerTodasLasCarrerasPublico = async (req, res) => {
       include: {
         model: UniversidadModel,
         attributes: ["nombre", "alias", "provincia", "tipo_gestion"],
+
+        // ----------------------------------------------------
+        // ⚠️ CAMBIO POR VERIFICACIÓN:
+        // Ahora, esta ruta pública SOLO mostrará carreras
+        // de universidades que tengan 'isVerified: true'.
+        // (Esto asume que ya añadiste 'isVerified' a tu UniversidadModel)
+        where: {
+          isVerified: true,
+        },
+        required: true, // Asegura que sea un INNER JOIN (si no está verificada, no la trae)
+        // ----------------------------------------------------
       },
     });
 

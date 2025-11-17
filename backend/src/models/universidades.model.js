@@ -23,6 +23,23 @@ export const UniversidadModel = sequelize.define(
     sitio_web: {
       type: DataTypes.STRING(255),
     },
+
+    // --- ⚠️ CAMPOS DE VERIFICACIÓN QUE AÑADIMOS ---
+    tipo_documento_verificacion: {
+      type: DataTypes.STRING,
+      allowNull: true, // Lo permite nulo por ahora
+    },
+    ruta_documento_verificacion: {
+      type: DataTypes.STRING,
+      allowNull: true, // Lo permite nulo
+    },
+    isVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false, // Por defecto, NO está verificada
+      allowNull: false,
+    },
+    // --- FIN DE CAMPOS AÑADIDOS ---
+
     // 'userId' (la llave foránea) se crea automáticamente por la relación
   },
   {

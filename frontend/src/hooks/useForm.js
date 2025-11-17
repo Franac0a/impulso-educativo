@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-// ⚠️ Usamos export nombrado
 export const useForm = (initialValues) => {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
@@ -12,7 +11,6 @@ export const useForm = (initialValues) => {
       [name]: value,
     });
 
-    // Limpia el error del campo cuando se edita
     if (errors[name]) {
       setErrors((prevErrors) => ({ ...prevErrors, [name]: undefined }));
     }
@@ -31,11 +29,8 @@ export const useForm = (initialValues) => {
       }
 
       try {
-        // Llama a la función de login/register
         await callback(values);
       } catch (error) {
-        // Guarda un error general de la API
-        // (Asumiendo que el error de la API tiene un .message o .mensaje)
         const apiError =
           error.mensaje || error.message || "Ocurrió un error en el servidor.";
         setErrors({ api: apiError });
@@ -49,10 +44,11 @@ export const useForm = (initialValues) => {
 
   return {
     values,
+    setValues, // <-- agregado
     errors,
+    setErrors,
     handleChange,
     handleSubmit,
     resetForm,
-    setErrors, // ⚠️ Añadimos 'setErrors' para que el register lo pueda usar
   };
 };

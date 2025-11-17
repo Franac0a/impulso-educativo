@@ -2,23 +2,45 @@ import { UniversidadModel } from "../models/universidades.model.js";
 import { CarreraModel } from "../models/carreras.model.js";
 import { Op } from "sequelize";
 
+/**
+ * CREAR UNA NUEVA UNIVERSIDAD (CON DOCUMENTO ADJUNTO)
+ * Esta función es llamada después de Multer.
+ */
 export const crearUniversidad = async (req, res) => {
   try {
-    const { nombre, alias, tipo_gestion, provincia, sitio_web } = req.body;
+    // ⚠️ 1. Multer pobló req.body con los campos de texto
+    const {
+      nombre,
+      alias,
+      tipo_gestion,
+      provincia,
+      sitio_web,
+      tipo_documento,
+    } = req.body;
 
-    // --- ¡CORRECCIÓN DEVUELTA A "req.usuario"! ---
-    const userId = req.usuario.id;
+    // ⚠️ 2. El archivo subido está en req.file
+    const ruta_documento = req.file ? req.file.path : null;
+
+    const userId = req.usuario.id; // ID del usuario logueado
+
+    // --- Validaciones (Archivos y Existencia) ---
+    if (!ruta_documento || !tipo_documento) {
+      return res
+        .status(400)
+        .json({ mensaje: "Falta el documento de verificación o su tipo." });
+    }
 
     const universidadExistente = await UniversidadModel.findOne({
       where: { userId: userId },
     });
-
     if (universidadExistente) {
       return res
         .status(400)
         .json({ mensaje: "Ya existe una universidad para este usuario." });
     }
+    // --- Fin Validaciones ---
 
+    // 3. Crear la nueva universidad en la BD
     const nuevaUniversidad = await UniversidadModel.create({
       nombre,
       alias,
@@ -26,22 +48,34 @@ export const crearUniversidad = async (req, res) => {
       provincia,
       sitio_web,
       userId: userId,
+
+      // ⚠️ 4. GUARDAR LOS DATOS DE VERIFICACIÓN
+      tipo_documento_verificacion: tipo_documento,
+      ruta_documento_verificacion: ruta_documento,
+      isVerified: false, // Por defecto, siempre es false al crearse
     });
 
     res.status(201).json({
-      mensaje: "Universidad creada correctamente.",
+      mensaje: "Universidad creada correctamente. Pendiente de verificación.",
       universidad: nuevaUniversidad,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error al crear universidad:", error);
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res
+        .status(400)
+        .json({ mensaje: "El archivo es demasiado grande (máx. 5MB)." });
+    }
     res.status(500).json({ mensaje: "Error al crear universidad." });
   }
 };
 
+/**
+ * OBTENER CARRERAS DE UNIVERSIDAD (MIS CARRERAS)
+ */
 export const obtenerMisCarreras = async (req, res) => {
   try {
     const universidad = await UniversidadModel.findOne({
-      // --- ¡CORRECCIÓN DEVUELTA A "req.usuario"! ---
       where: { userId: req.usuario.id },
     });
 
@@ -60,6 +94,9 @@ export const obtenerMisCarreras = async (req, res) => {
   }
 };
 
+/**
+ * OBTENER TODAS LAS UNIVERSIDADES (PÚBLICO)
+ */
 export const obtenerTodasLasUniversidadesPublico = async (req, res) => {
   try {
     const { search } = req.query;
@@ -68,23 +105,14 @@ export const obtenerTodasLasUniversidadesPublico = async (req, res) => {
 
     if (search) {
       filtro[Op.or] = [
-        {
-          nombre: {
-            [Op.like]: `%${search}%`,
-          },
-        },
-        {
-          alias: {
-            [Op.like]: `%${search}%`,
-          },
-        },
-        {
-          provincia: {
-            [Op.like]: `%${search}%`,
-          },
-        },
+        { nombre: { [Op.like]: `%${search}%` } },
+        { alias: { [Op.like]: `%${search}%` } },
+        { provincia: { [Op.like]: `%${search}%` } },
       ];
     }
+
+    // ⚠️ Solo muestra universidades verificadas si es búsqueda pública
+    filtro.isVerified = true;
 
     const universidades = await UniversidadModel.findAll({
       where: filtro,
@@ -96,14 +124,14 @@ export const obtenerTodasLasUniversidadesPublico = async (req, res) => {
   }
 };
 
-// --- ¡NUEVAS FUNCIONES PARA EL DASHBOARD! ---
-
+/**
+ * OBTENER MI INSTITUCIÓN (usado por el Dashboard y Banner)
+ */
 export const obtenerMiInstitucion = async (req, res) => {
   try {
-    // --- ¡CORRECCIÓN DEVUELTA A "req.usuario"! ---
-    // Esta era la línea 119 que causaba el crash
     const userId = req.usuario.id;
 
+    // Trae todos los campos, incluyendo los de verificación
     const institucion = await UniversidadModel.findOne({
       where: { userId: userId },
     });
@@ -116,7 +144,6 @@ export const obtenerMiInstitucion = async (req, res) => {
 
     res.status(200).json({ institucion: institucion });
   } catch (error) {
-    // --- Log de error mejorado ---
     console.error("Error al obtener perfil de institución:", error);
     res
       .status(500)
@@ -124,10 +151,14 @@ export const obtenerMiInstitucion = async (req, res) => {
   }
 };
 
+/**
+ * ACTUALIZAR MI INSTITUCIÓN (usado para editar perfil)
+ */
 export const actualizarMiInstitucion = async (req, res) => {
   try {
-    // --- ¡CORRECCIÓN DEVUELTA A "req.usuario"! ---
     const userId = req.usuario.id;
+    // Se asume que esta ruta NO incluye la subida de archivos,
+    // sino solo los campos de texto
     const { nombre, alias, tipo_gestion, provincia, sitio_web } = req.body;
 
     const institucion = await UniversidadModel.findOne({
@@ -135,12 +166,9 @@ export const actualizarMiInstitucion = async (req, res) => {
     });
 
     if (!institucion) {
-      return res
-        .status(4404) // Corregido a 404
-        .json({
-          mensaje:
-            "No se encontró el perfil de la institución para actualizar.",
-        });
+      return res.status(404).json({
+        mensaje: "No se encontró el perfil de la institución para actualizar.",
+      });
     }
 
     institucion.nombre = nombre || institucion.nombre;

@@ -1,5 +1,3 @@
-// src/services/university.service.js
-// ⚠️ ¡ESTA ES LA LÍNEA CORREGIDA!
 import { api } from "./api";
 
 const UNIV_URL = "/universidades";
@@ -19,13 +17,21 @@ export const universityService = {
 
   // PUT /api/universidades/mi-perfil
   updateMyInstitution: async (data) => {
+    // (Esto también necesitará 'multipart/form-data' si permitís editar el archivo)
     const response = await api.put(`${UNIV_URL}/mi-perfil`, data);
     return response.data;
   },
 
-  // POST /api/universidades
-  createInstitution: async (data) => {
-    const response = await api.post(UNIV_URL, data);
+  // ⚠️ POST /api/universidades (¡ACTUALIZADO!)
+  createInstitution: async (formData) => {
+    // 'formData' ahora es un objeto FormData
+    const response = await api.post(UNIV_URL, formData, {
+      // Anulamos el 'Content-Type: application/json'
+      // para que Axios lo configure automáticamente a 'multipart/form-data'
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   },
 };

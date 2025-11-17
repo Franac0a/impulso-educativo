@@ -3,17 +3,15 @@ import {
   crearUniversidad,
   obtenerMisCarreras,
   obtenerTodasLasUniversidadesPublico,
-
-  // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
-  // Importamos los nombres correctos de tu controlador
   obtenerMiInstitucion,
   actualizarMiInstitucion,
-  // --- FIN DE LA CORRECCIÓN ---
 } from "../controllers/universidad.controller.js";
 import {
   verificarUsuario,
   soloUniversidad,
 } from "../middlewares/auth.middleware.js";
+// ⚠️ 1. IMPORTAR MULTER
+import { uploadDocumento } from "../config/multer.js";
 
 export const universidadRoutes = Router();
 
@@ -23,38 +21,14 @@ universidadRoutes.get("/", obtenerTodasLasUniversidadesPublico);
 // --- RUTAS PROTEGIDAS (ADMIN) ---
 
 // POST /api/universidades
+// ⚠️ 2. USAMOS MULTER ANTES DEL CONTROLADOR
 universidadRoutes.post(
   "/",
   verificarUsuario,
   soloUniversidad,
+  // El nombre del campo debe coincidir con el del frontend (documento_verificacion)
+  uploadDocumento.single("documento_verificacion"),
   crearUniversidad
 );
 
-// --- ¡RUTAS CORREGIDAS CON LOS NOMBRES DE TU CONTROLADOR! ---
-
-// GET /api/universidades/mi-perfil
-universidadRoutes.get(
-  "/mi-perfil",
-  verificarUsuario,
-  soloUniversidad,
-  obtenerMiInstitucion // <-- Nombre corregido
-);
-
-// PUT /api/universidades/mi-perfil
-universidadRoutes.put(
-  "/mi-perfil",
-  verificarUsuario,
-  soloUniversidad,
-  actualizarMiInstitucion // <-- Nombre corregido (antes era editarMiPerfil)
-);
-
-// --- FIN DE RUTAS CORREGIDAS ---
-
-// GET /api/universidades/mis-carreras
-// (Esta ruta no la usa el panel, el panel usa /api/carreras/mis-carreras)
-universidadRoutes.get(
-  "/mis-carreras",
-  verificarUsuario,
-  soloUniversidad,
-  obtenerMisCarreras
-);
+// ... (resto de rutas)
