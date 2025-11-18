@@ -40,6 +40,12 @@ export const UniversidadModel = sequelize.define(
     },
     // --- FIN DE CAMPOS AÑADIDOS ---
 
+    // ⚠️ NUEVO CAMPO PARA EL LOGO (Añadido)
+    logo_url: {
+      type: DataTypes.STRING,
+      allowNull: true, // Puede ser nulo si no suben logo
+    },
+
     // 'userId' (la llave foránea) se crea automáticamente por la relación
   },
   {

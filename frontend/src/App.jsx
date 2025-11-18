@@ -20,6 +20,8 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { MyCareersPage } from "./pages/MyCareersPage";
 import { CreateCareerPage } from "./pages/CreateCareerPage";
 import { CreateInstitutionPage } from "./pages/CreateInstitutionPage";
+// ⚠️ NUEVA IMPORTACIÓN
+import { EditInstitutionPage } from "./pages/EditInstitutionPage";
 
 export const App = () => {
   return (
@@ -61,6 +63,11 @@ export const App = () => {
             <Route
               path="/dashboard/crear-perfil"
               element={<CreateInstitutionPage />}
+            />
+            {/* ⚠️ RUTA ACTUALIZADA */}
+            <Route
+              path="/dashboard/editar-perfil"
+              element={<EditInstitutionPage />}
             />
           </Route>
 

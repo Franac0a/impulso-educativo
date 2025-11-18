@@ -10,7 +10,7 @@ import { InscripcionModel } from "../src/models/inscripcion.model.js";
 
 // --- Datos de Ejemplo ---
 
-// 1. Universidades (Añadidas ISFDAC y UCP)
+// 1. Universidades (¡TODAS VERIFICADAS PARA MOSTRAR CARRERAS!)
 const universidadesData = [
   {
     nombre: "Universidad Tecnológica Nacional - FRRF",
@@ -19,6 +19,7 @@ const universidadesData = [
     provincia: "Formosa",
     sitio_web: "https://www.frre.utn.edu.ar/",
     userId: 1,
+    isVerified: true, // <--- CAMBIO: Aprobada en el seed
   },
   {
     nombre: "Universidad Nacional de Formosa",
@@ -27,6 +28,7 @@ const universidadesData = [
     provincia: "Formosa",
     sitio_web: "https://www.unf.edu.ar/",
     userId: 1,
+    isVerified: true, // <--- CAMBIO: Aprobada en el seed
   },
   {
     nombre: "Instituto Politécnico de Formosa",
@@ -35,6 +37,7 @@ const universidadesData = [
     provincia: "Formosa",
     sitio_web: "https://www.ipf.edu.ar/", // Revisa si esta URL es correcta
     userId: 1,
+    isVerified: true, // <--- CAMBIO: Aprobada en el seed
   },
   // --- NUEVAS INSTITUCIONES ---
   {
@@ -44,6 +47,7 @@ const universidadesData = [
     provincia: "Formosa",
     sitio_web: "http://isfdcabrera-for.infd.edu.ar/sitio/", // Revisa si esta URL es correcta
     userId: 1,
+    isVerified: true, // <--- CAMBIO: Aprobada en el seed
   },
   {
     nombre: "Universidad de la Cuenca del Plata - Sede Formosa",
@@ -52,6 +56,7 @@ const universidadesData = [
     provincia: "Formosa",
     sitio_web: "https://ucp.edu.ar/sede-formosa/", // Revisa si esta URL es correcta
     userId: 1,
+    isVerified: true, // <--- CAMBIO: Aprobada en el seed
   },
 ];
 
@@ -65,9 +70,9 @@ const sembrarDatos = async () => {
 
     // Sincronizar BD (¡CON force: true BORRA TODO!)
     console.log("Sincronizando base de datos... (force: true)");
-    // ¡¡IMPORTANTE!! Descomentado para aplicar cambios en la estructura de la tabla
-    // await sequelize.sync({ force: true });                                              DESCOMENTAR PARA PODER CARGAR BIEN TODA LA INFORMACION DE LAS UNIVERSIDADES
-    // Por favor, recuerda volver a comentarlo después de la ejecución exitosa
+    // IMPORTANTE: DEBES DESCOMENTAR LA SIGUIENTE LÍNEA PARA APLICAR EL CAMBIO
+    // EN LA BASE DE DATOS Y LUEGO VOLVER A COMENTARLA.
+    await sequelize.sync({ force: true });
     console.log("¡Tablas borradas y recreadas con la nueva estructura!");
 
     console.log("Reactivando FOREIGN_KEY_CHECKS...");
@@ -331,7 +336,7 @@ const sembrarDatos = async () => {
 
     console.log("---------------------------------");
     console.log(
-      `¡Base de datos sembrada con éxito! (${carrerasData.length} carreras con perfiles RIASEC)`
+      `¡Base de datos sembrada con éxito! (${carrerasData.length} carreras con perfiles RIASEC). Todas las universidades del seed están verificadas.`
     );
     console.log("---------------------------------");
   } catch (error) {
