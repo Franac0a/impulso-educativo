@@ -1,94 +1,119 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
-import { userService } from "../services/user.service";
-import { useAuth } from "../context/AuthContext";
-
-const RIASEC_OPTIONS = ["R", "I", "A", "S", "E", "C"];
+// src/pages/VocationalTestPage.jsx
+import { useState, useEffect } from "react";
+import questions from "../data/questions.js";
+import { saveVocationalResult } from "../services/user.service.js";
 
 export const VocationalTestPage = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  const [selected, setSelected] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Si ya hay resultado guardado, mostrarlo
-    if (user?.riasecProfile) {
-      setSelected(user.riasecProfile.split(""));
-    }
-  }, [user]);
+  const totalQuestions = questions.length;
 
-  const toggleOption = (option) => {
-    setSelected((prev) => {
-      if (prev.includes(option)) {
-        return prev.filter((o) => o !== option);
-      } else {
-        if (prev.length < 3) {
-          return [...prev, option];
-        }
-        return prev; // Máximo 3 opciones
-      }
+  // Función para calcular las 3 letras principales del perfil RIASEC
+  const calculateRIASECProfile = (answers) => {
+    const scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+    answers.forEach((code) => {
+      if (scores[code] !== undefined) scores[code]++;
     });
+    return Object.entries(scores)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([key]) => key)
+      .join("");
   };
 
-  const handleSave = async () => {
-    if (selected.length === 0) {
-      setError("Seleccioná al menos una opción");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      await userService.saveVocationalResult(selected.join(""));
-      alert("Resultado guardado correctamente!");
-      navigate("/perfil");
-    } catch (err) {
-      console.error(err);
-      setError("Error al guardar el resultado. Intentá nuevamente.");
-    } finally {
-      setLoading(false);
+  const handleAnswer = async (code) => {
+    const updatedAnswers = [...selectedAnswers, code];
+    setSelectedAnswers(updatedAnswers);
+
+    if (currentQuestion + 1 < totalQuestions) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      // Fin del test
+      const profile = calculateRIASECProfile(updatedAnswers);
+      setLoading(true);
+      try {
+        await saveVocationalResult(profile);
+        alert(`Test completado. Tu perfil RIASEC es: ${profile}`);
+      } catch (error) {
+        console.error("Error guardando el resultado vocacional:", error);
+        alert("Ocurrió un error al guardar tu resultado.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
+
+  const handleRestart = () => {
+    setSelectedAnswers([]);
+    setCurrentQuestion(0);
+  };
+
+  const progressPercent = Math.round((currentQuestion / totalQuestions) * 100);
 
   return (
-    <div className="p-4 md:p-8 min-h-screen bg-gray-50">
-      <h1 className="text-3xl font-bold text-teal-700 mb-6 text-center">
-        Test Vocacional RIASEC
-      </h1>
+    <div style={{ maxWidth: "600px", margin: "auto", padding: "20px" }}>
+      <h2>Test de Intereses Vocacionales</h2>
 
-      <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <p className="text-gray-700 mb-4">
-          Seleccioná tus tres principales intereses o habilidades:
-        </p>
-
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          {RIASEC_OPTIONS.map((option) => (
-            <button
-              key={option}
-              onClick={() => toggleOption(option)}
-              className={`p-3 rounded-lg border font-semibold ${
-                selected.includes(option)
-                  ? "bg-teal-600 text-white border-teal-600"
-                  : "bg-white text-gray-700 border-gray-300"
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700 transition"
+      <div style={{ margin: "20px 0" }}>
+        <div
+          style={{
+            background: "#e0e0e0",
+            height: "20px",
+            borderRadius: "10px",
+            overflow: "hidden",
+          }}
         >
-          {loading ? "Guardando..." : "Guardar Resultado"}
-        </button>
+          <div
+            style={{
+              width: `${progressPercent}%`,
+              background: "#4caf50",
+              height: "100%",
+              transition: "width 0.3s",
+            }}
+          ></div>
+        </div>
+        <p>
+          Pregunta {currentQuestion + 1} / {totalQuestions}
+        </p>
       </div>
+
+      <h3>{questions[currentQuestion].text}</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {questions[currentQuestion].options.map((option, idx) => (
+          <button
+            key={idx}
+            onClick={() => handleAnswer(option.code)}
+            style={{
+              padding: "10px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+              cursor: "pointer",
+            }}
+            disabled={loading}
+          >
+            {option.text}
+          </button>
+        ))}
+      </div>
+
+      {selectedAnswers.length > 0 && (
+        <button
+          onClick={handleRestart}
+          style={{
+            marginTop: "20px",
+            padding: "10px 20px",
+            borderRadius: "5px",
+            border: "none",
+            background: "#f44336",
+            color: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          Reiniciar Test
+        </button>
+      )}
     </div>
   );
 };

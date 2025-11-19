@@ -3,20 +3,22 @@ import { authService } from "../services/auth.service";
 import { userService } from "../services/user.service";
 
 const AuthContext = createContext();
+
 export const useAuth = () => useContext(AuthContext);
+
+const checkAuthStatus = async () => {
+  try {
+    const response = await userService.getProfile();
+    return response.perfil || null;
+  } catch (error) {
+    console.error("Error en checkAuthStatus:", error);
+    return null;
+  }
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const checkAuthStatus = async () => {
-    try {
-      const data = await userService.getProfile();
-      return data.perfil || null;
-    } catch {
-      return null;
-    }
-  };
 
   useEffect(() => {
     const loadUser = async () => {
@@ -28,20 +30,52 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    await authService.login(email, password);
-    const perfil = await checkAuthStatus();
-    setUser(perfil);
-    return perfil;
+    try {
+      await authService.login(email, password);
+      const perfil = await checkAuthStatus();
+      setUser(perfil);
+      return perfil;
+    } catch (error) {
+      setUser(null);
+      throw error;
+    }
   };
 
   const register = async (userData) => {
-    await authService.register(userData);
-    return await login(userData.email, userData.password);
+    try {
+      await authService.register(userData);
+      return await login(userData.email, userData.password);
+    } catch (error) {
+      throw error;
+    }
   };
 
   const logout = async () => {
     await authService.logout();
     setUser(null);
+  };
+
+  const saveVocationalResult = async (riasecProfile) => {
+    try {
+      const response = await userService.saveVocationalResult(riasecProfile);
+      // Actualizamos el usuario con el nuevo resultado
+      setUser((prev) => ({ ...prev, riasecProfile: response.riasecProfile }));
+      return response;
+    } catch (error) {
+      console.error("Error guardando el resultado vocacional:", error);
+      throw error;
+    }
+  };
+
+  const resetVocationalResult = async () => {
+    try {
+      const response = await userService.saveVocationalResult(null); // reiniciamos el campo
+      setUser((prev) => ({ ...prev, riasecProfile: null }));
+      return response;
+    } catch (error) {
+      console.error("Error reiniciando el resultado vocacional:", error);
+      throw error;
+    }
   };
 
   return (
@@ -53,6 +87,9 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         isAuthenticated: !!user,
+        userType: user?.type || null,
+        saveVocationalResult,
+        resetVocationalResult, // <-- nuevo
       }}
     >
       {!loading && children}

@@ -1,77 +1,77 @@
-// src/pages/UserProfilePage.jsx
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { userService } from "../services/user.service";
-import { useNavigate } from "react-router";
 
 export const UserProfilePage = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const { user, loading, logout } = useAuth();
+  const [perfil, setPerfil] = useState(null);
+  const [cargandoPerfil, setCargandoPerfil] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchPerfil = async () => {
       try {
-        const data = await userService.getProfile();
-        setUser(data.perfil);
-      } catch (error) {
-        console.error("Error al obtener perfil:", error);
+        const response = await userService.getProfile();
+        // ⚠️ axios ya devuelve response.data
+        setPerfil(response.perfil || null);
+      } catch (err) {
+        console.error("Error al cargar perfil:", err);
+        setError("No se pudo cargar el perfil.");
       } finally {
-        setLoading(false);
+        setCargandoPerfil(false);
       }
     };
-    fetchProfile();
+
+    fetchPerfil();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">Cargando perfil...</p>;
-
-  if (!user)
+  if (loading || cargandoPerfil) {
     return (
-      <p className="text-center mt-10 text-red-500">
-        No se pudo cargar el perfil.
-      </p>
+      <div className="text-center mt-20">
+        <p>Cargando perfil...</p>
+      </div>
     );
+  }
 
-  const riasecProfile = user.riasecProfile
-    ? JSON.parse(user.riasecProfile)
-    : null;
+  if (error) {
+    return (
+      <div className="text-center mt-20 text-red-600">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (!perfil) {
+    return (
+      <div className="text-center mt-20">
+        <p>No se encontró el perfil del usuario.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">Mi Perfil</h1>
+    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white shadow rounded">
+      <h1 className="text-2xl font-bold mb-4">Perfil de Usuario</h1>
+      <p>
+        <strong>Nombre:</strong> {perfil.name}
+      </p>
+      <p>
+        <strong>Email:</strong> {perfil.email}
+      </p>
+      <p>
+        <strong>Tipo:</strong> {perfil.type}
+      </p>
+      <p>
+        <strong>Perfil RIASEC:</strong>{" "}
+        {perfil.riasecProfile || "No completado"}
+      </p>
 
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <p>
-          <strong>Nombre:</strong> {user.name}
-        </p>
-        <p>
-          <strong>Correo:</strong> {user.email}
-        </p>
-        <p>
-          <strong>Tipo de usuario:</strong> Estudiante
-        </p>
-
-        <div className="mt-6 p-4 border-t border-gray-200">
-          <h2 className="text-xl font-semibold mb-2">
-            Perfil Vocacional (RIASEC)
-          </h2>
-
-          {riasecProfile && riasecProfile.length > 0 ? (
-            <p className="text-teal-700 font-bold text-lg">
-              {riasecProfile.join(" - ")}
-            </p>
-          ) : (
-            <div>
-              <p>¡Test pendiente!</p>
-              <button
-                onClick={() => navigate("/test-vocacional")}
-                className="mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
-              >
-                Realizar el Test Vocacional ahora
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      <button
+        onClick={logout}
+        className="mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+      >
+        Cerrar sesión
+      </button>
     </div>
   );
 };
