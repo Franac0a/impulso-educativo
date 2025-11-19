@@ -20,7 +20,6 @@ export const useForm = (initialValues) => {
     (callback, validateFn = () => ({})) =>
     async (event) => {
       event.preventDefault();
-
       const validationErrors = validateFn(values);
 
       if (Object.keys(validationErrors).length > 0) {
@@ -32,7 +31,7 @@ export const useForm = (initialValues) => {
         await callback(values);
       } catch (error) {
         const apiError =
-          error.mensaje || error.message || "Ocurrió un error en el servidor.";
+          error.response?.data?.mensaje || error.message || "Ocurrió un error.";
         setErrors({ api: apiError });
       }
     };
@@ -44,11 +43,11 @@ export const useForm = (initialValues) => {
 
   return {
     values,
-    setValues, // <-- agregado
     errors,
-    setErrors,
     handleChange,
     handleSubmit,
     resetForm,
+    setValues, // Importante para CreateInstitutionPage
+    setErrors,
   };
 };

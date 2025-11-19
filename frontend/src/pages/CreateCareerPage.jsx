@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router"; // ⚠️ de 'react-router'
 import { useForm } from "../hooks/useForm";
 import { universityService } from "../services/university.service";
-import { careersService } from "../services/careers.service";
+import { careerService } from "../services/career.service";
 
 // Opciones para los <select> basadas en tu "carrera.model.js"
 const tiposDeCarrera = ["Grado", "Tecnicatura", "Posgrado"];
@@ -85,7 +85,7 @@ export const CreateCareerPage = () => {
       };
 
       // Llamamos al servicio de creación
-      await careersService.create(dataToSend);
+      await careerService.create(dataToSend);
 
       // Éxito
       alert("¡Carrera creada exitosamente!");

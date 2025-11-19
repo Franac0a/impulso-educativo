@@ -3,35 +3,60 @@ import { api } from "./api";
 const UNIV_URL = "/universidades";
 
 export const universityService = {
-  // GET /api/universidades?search=...
+  /**
+   * Obtener todas las universidades públicas (con filtro opcional)
+   * GET /api/universidades?search=...
+   */
   getAllPublic: async (filters = {}) => {
     const response = await api.get(UNIV_URL, { params: filters });
     return response.data;
   },
 
-  // GET /api/universidades/mi-perfil
+  /**
+   * Obtener universidad por ID (perfil público)
+   * GET /api/universidades/:id
+   */
+  getById: async (id) => {
+    const response = await api.get(`${UNIV_URL}/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Obtener mi institución (usuario logueado)
+   * GET /api/universidades/mi-perfil
+   */
   getMyInstitution: async () => {
     const response = await api.get(`${UNIV_URL}/mi-perfil`);
     return response.data;
   },
 
-  // PUT /api/universidades/mi-perfil
+  /**
+   * Actualizar mi institución (usuario logueado)
+   * PUT /api/universidades/mi-perfil
+   */
   updateMyInstitution: async (data) => {
-    // (Esto también necesitará 'multipart/form-data' si permitís editar el archivo)
     const response = await api.put(`${UNIV_URL}/mi-perfil`, data);
     return response.data;
   },
 
-  // ⚠️ POST /api/universidades (¡ACTUALIZADO!)
+  /**
+   * Crear nueva institución (usuario logueado)
+   * POST /api/universidades
+   * 'formData' debe ser un FormData si incluye archivos
+   */
   createInstitution: async (formData) => {
-    // 'formData' ahora es un objeto FormData
     const response = await api.post(UNIV_URL, formData, {
-      // Anulamos el 'Content-Type: application/json'
-      // para que Axios lo configure automáticamente a 'multipart/form-data'
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     });
+    return response.data;
+  },
+
+  /**
+   * Obtener mis carreras (usuario logueado)
+   * GET /api/universidades/mis-carreras
+   */
+  getMyCareers: async () => {
+    const response = await api.get(`${UNIV_URL}/mis-carreras`);
     return response.data;
   },
 };

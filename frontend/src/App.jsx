@@ -20,8 +20,11 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { MyCareersPage } from "./pages/MyCareersPage";
 import { CreateCareerPage } from "./pages/CreateCareerPage";
 import { CreateInstitutionPage } from "./pages/CreateInstitutionPage";
-// ⚠️ NUEVA IMPORTACIÓN
 import { EditInstitutionPage } from "./pages/EditInstitutionPage";
+import { CareerDetailPage } from "./pages/CareerDetailPage";
+import { UniversityProfilePage } from "./pages/UniversityProfilePage";
+import { UserProfilePage } from "./pages/UserProfilePage";
+import { VocationalTestPage } from "./pages/VocationalTestPage";
 
 export const App = () => {
   return (
@@ -31,28 +34,39 @@ export const App = () => {
 
       <div className="pt-32">
         <Routes>
+          {/* ------------------- */}
           {/* --- RUTAS PÚBLICAS (Para todos) --- */}
+          {/* ------------------- */}
           <Route path="/" element={<HomePage />} />
           <Route path="/contacto" element={<ContactPage />} />
 
+          {/* ------------------- */}
           {/* --- RUTAS PÚBLICAS (Solo invitados) --- */}
+          {/* ------------------- */}
           <Route element={<PublicRoutes />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Route>
 
-          {/* --- RUTAS PRIVADAS (Cualquier logueado) --- */}
+          {/* ------------------- */}
+          {/* --- RUTAS PRIVADAS (Cualquier usuario registrado) --- */}
+          {/* ------------------- */}
           <Route element={<PrivateRoutes />}>
             <Route path="/carreras" element={<CareerListPage />} />
+            <Route path="/carreras/:id" element={<CareerDetailPage />} />
+            <Route
+              path="/universidades/:id"
+              element={<UniversityProfilePage />}
+            />
+
+            {/* Rutas de Estudiantes */}
+            <Route path="/perfil" element={<UserProfilePage />} />
+            <Route path="/test-vocacional" element={<VocationalTestPage />} />
           </Route>
 
-          {/* --- RUTAS PRIVADAS (Estudiantes) --- */}
-          <Route element={<PrivateRoutes allowedRole="estudiante" />}>
-            <Route path="/perfil" element={<h1>Mi Perfil (Estudiante)</h1>} />
-            <Route path="/test-vocacional" element={<h1>Test Vocacional</h1>} />
-          </Route>
-
-          {/* --- RUTAS PRIVADAS (Universidades) --- */}
+          {/* ------------------- */}
+          {/* --- RUTAS PRIVADAS (Solo universidades) --- */}
+          {/* ------------------- */}
           <Route element={<PrivateRoutes allowedRole="universidad" />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/dashboard/mis-carreras" element={<MyCareersPage />} />
@@ -64,14 +78,15 @@ export const App = () => {
               path="/dashboard/crear-perfil"
               element={<CreateInstitutionPage />}
             />
-            {/* ⚠️ RUTA ACTUALIZADA */}
             <Route
               path="/dashboard/editar-perfil"
               element={<EditInstitutionPage />}
             />
           </Route>
 
-          {/* Ruta 404 */}
+          {/* ------------------- */}
+          {/* --- Ruta 404 --- */}
+          {/* ------------------- */}
           <Route path="*" element={<h1>404: Página No Encontrada</h1>} />
         </Routes>
       </div>

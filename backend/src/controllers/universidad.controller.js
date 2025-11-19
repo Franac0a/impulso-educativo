@@ -4,11 +4,9 @@ import { Op } from "sequelize";
 
 /**
  * CREAR UNA NUEVA UNIVERSIDAD (CON DOCUMENTO ADJUNTO)
- * Esta función es llamada después de Multer.
  */
 export const crearUniversidad = async (req, res) => {
   try {
-    // ⚠️ 1. Multer pobló req.body con los campos de texto
     const {
       nombre,
       alias,
@@ -18,12 +16,9 @@ export const crearUniversidad = async (req, res) => {
       tipo_documento,
     } = req.body;
 
-    // ⚠️ 2. El archivo subido está en req.file
     const ruta_documento = req.file ? req.file.path : null;
+    const userId = req.usuario.id;
 
-    const userId = req.usuario.id; // ID del usuario logueado
-
-    // --- Validaciones (Archivos y Existencia) ---
     if (!ruta_documento || !tipo_documento) {
       return res
         .status(400)
@@ -31,28 +26,24 @@ export const crearUniversidad = async (req, res) => {
     }
 
     const universidadExistente = await UniversidadModel.findOne({
-      where: { userId: userId },
+      where: { userId },
     });
     if (universidadExistente) {
       return res
         .status(400)
         .json({ mensaje: "Ya existe una universidad para este usuario." });
     }
-    // --- Fin Validaciones ---
 
-    // 3. Crear la nueva universidad en la BD
     const nuevaUniversidad = await UniversidadModel.create({
       nombre,
       alias,
       tipo_gestion,
       provincia,
       sitio_web,
-      userId: userId,
-
-      // ⚠️ 4. GUARDAR LOS DATOS DE VERIFICACIÓN
+      userId,
       tipo_documento_verificacion: tipo_documento,
       ruta_documento_verificacion: ruta_documento,
-      isVerified: false, // Por defecto, siempre es false al crearse
+      isVerified: false,
     });
 
     res.status(201).json({
@@ -102,7 +93,6 @@ export const obtenerTodasLasUniversidadesPublico = async (req, res) => {
     const { search } = req.query;
 
     const filtro = {};
-
     if (search) {
       filtro[Op.or] = [
         { nombre: { [Op.like]: `%${search}%` } },
@@ -111,7 +101,6 @@ export const obtenerTodasLasUniversidadesPublico = async (req, res) => {
       ];
     }
 
-    // ⚠️ Solo muestra universidades verificadas si es búsqueda pública
     filtro.isVerified = true;
 
     const universidades = await UniversidadModel.findAll({
@@ -131,9 +120,8 @@ export const obtenerMiInstitucion = async (req, res) => {
   try {
     const userId = req.usuario.id;
 
-    // Trae todos los campos, incluyendo los de verificación
     const institucion = await UniversidadModel.findOne({
-      where: { userId: userId },
+      where: { userId },
     });
 
     if (!institucion) {
@@ -142,7 +130,7 @@ export const obtenerMiInstitucion = async (req, res) => {
       });
     }
 
-    res.status(200).json({ institucion: institucion });
+    res.status(200).json({ institucion });
   } catch (error) {
     console.error("Error al obtener perfil de institución:", error);
     res
@@ -157,12 +145,10 @@ export const obtenerMiInstitucion = async (req, res) => {
 export const actualizarMiInstitucion = async (req, res) => {
   try {
     const userId = req.usuario.id;
-    // Se asume que esta ruta NO incluye la subida de archivos,
-    // sino solo los campos de texto
     const { nombre, alias, tipo_gestion, provincia, sitio_web } = req.body;
 
     const institucion = await UniversidadModel.findOne({
-      where: { userId: userId },
+      where: { userId },
     });
 
     if (!institucion) {
@@ -181,10 +167,41 @@ export const actualizarMiInstitucion = async (req, res) => {
 
     res.status(200).json({
       mensaje: "Perfil de la institución actualizado correctamente.",
-      institucion: institucion,
+      institucion,
     });
   } catch (error) {
     console.error("Error al actualizar perfil de institución:", error);
+    res
+      .status(500)
+      .json({ mensaje: "Error interno del servidor", error: error.message });
+  }
+};
+
+/**
+ * OBTENER UNIVERSIDAD POR ID (PÚBLICO)
+ * Trae también todas las carreras asociadas
+ */
+export const obtenerUniversidadPorId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const universidad = await UniversidadModel.findOne({
+      where: { id, isVerified: true },
+      include: [
+        {
+          model: CarreraModel,
+          as: "Carreras", // Debe coincidir con la relación Sequelize
+        },
+      ],
+    });
+
+    if (!universidad) {
+      return res.status(404).json({ mensaje: "Universidad no encontrada." });
+    }
+
+    res.status(200).json(universidad);
+  } catch (error) {
+    console.error("Error al obtener universidad por ID:", error);
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });

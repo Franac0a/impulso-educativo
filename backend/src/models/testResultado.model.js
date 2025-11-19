@@ -5,14 +5,10 @@ import { UserModel } from "./user.model.js";
 export const TestResultModel = sequelize.define(
   "TestResult",
   {
-    mbti: {
-      type: DataTypes.STRING(10),
+    riasec: {
+      type: DataTypes.STRING(3),
       allowNull: false,
-    },
-    mbtiType: {
-      // ¡Asegúrate de incluir este campo!
-      type: DataTypes.STRING(10),
-      allowNull: true, // Puede ser nulo si el usuario aún no ha hecho el test
+      comment: "Código RIASEC del test (ej: SAI)",
     },
     userId: {
       type: DataTypes.INTEGER,
@@ -29,6 +25,7 @@ export const TestResultModel = sequelize.define(
   }
 );
 
+// Relaciones
 TestResultModel.belongsTo(UserModel, {
   foreignKey: "userId",
   onDelete: "CASCADE",

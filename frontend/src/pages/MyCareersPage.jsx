@@ -1,7 +1,7 @@
 // src/pages/MyCareersPage.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router"; // ⚠️ de 'react-router'
-import { careersService } from "../services/careers.service";
+import { careerService } from "../services/career.service";
 import { useAuth } from "../context/AuthContext";
 
 // ⚠️ Exportamos como una constante nombrada
@@ -14,7 +14,7 @@ export const MyCareersPage = () => {
   useEffect(() => {
     const fetchMyCareers = async () => {
       try {
-        const data = await careersService.getMyCareers();
+        const data = await careerService.getMyCareers();
         setCarreras(data);
       } catch (err) {
         setError(

@@ -29,15 +29,20 @@ export const register = async (req, res) => {
 
     res.status(201).json({
       mensaje: "Usuario registrado correctamente.",
-      usuario: nuevoUsuario,
+      usuario: {
+        id: nuevoUsuario.id,
+        name: nuevoUsuario.name,
+        email: nuevoUsuario.email,
+        type: nuevoUsuario.type,
+        riasecProfile: nuevoUsuario.riasecProfile,
+      },
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ mensaje: "Error en el registro.", error });
   }
 };
 
-// En tu controlador de login
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -53,23 +58,19 @@ export const login = async (req, res) => {
     const token = generarToken({ id: usuario.id, type: usuario.type });
     res.cookie("token", token, { httpOnly: true });
 
-    // La respuesta a enviar
-    const responseData = {
+    res.status(200).json({
       mensaje: "Login exitoso.",
       user: {
         id: usuario.id,
+        name: usuario.name,
         email: usuario.email,
-        type: usuario.type, // <-- Revisa si esta propiedad está definida
+        type: usuario.type,
+        riasecProfile: usuario.riasecProfile,
       },
-      token: token,
-    };
-
-    // Esto te permitirá ver la respuesta completa en la consola del servidor
-    console.log("Respuesta del servidor:", responseData);
-
-    res.status(200).json(responseData);
+      token,
+    });
   } catch (error) {
-    console.error("Error en el login:", error); // Muestra el error en la consola
+    console.error("Error en el login:", error);
     res.status(500).json({ mensaje: "Error en el login.", error });
   }
 };

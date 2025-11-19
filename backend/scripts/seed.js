@@ -20,6 +20,9 @@ const universidadesData = [
     sitio_web: "https://www.frre.utn.edu.ar/",
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
+    // Puedes agregar logo_url aquí si lo deseas para probar las imágenes
+    logo_url:
+      "https://upload.wikimedia.org/wikipedia/commons/6/67/UTN_logo.jpg",
   },
   {
     nombre: "Universidad Nacional de Formosa",
@@ -29,6 +32,8 @@ const universidadesData = [
     sitio_web: "https://www.unf.edu.ar/",
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
+    logo_url:
+      "https://www.unf.edu.ar/wp-content/uploads/2018/09/Logo-UNaF-Color.png",
   },
   {
     nombre: "Instituto Politécnico de Formosa",
@@ -38,6 +43,7 @@ const universidadesData = [
     sitio_web: "https://www.ipf.edu.ar/", // Revisa si esta URL es correcta
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
+    logo_url: "https://www.ipf.edu.ar/assets/img/logo.png",
   },
   // --- NUEVAS INSTITUCIONES ---
   {
@@ -48,6 +54,7 @@ const universidadesData = [
     sitio_web: "http://isfdcabrera-for.infd.edu.ar/sitio/", // Revisa si esta URL es correcta
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
+    // logo_url: null, // Sin logo para probar el fallback
   },
   {
     nombre: "Universidad de la Cuenca del Plata - Sede Formosa",
@@ -57,6 +64,7 @@ const universidadesData = [
     sitio_web: "https://ucp.edu.ar/sede-formosa/", // Revisa si esta URL es correcta
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
+    logo_url: "https://ucp.edu.ar/wp-content/uploads/2020/06/Logo-UCP.png",
   },
 ];
 
@@ -81,17 +89,15 @@ const sembrarDatos = async () => {
     console.log("Conectado a la base de datos...");
 
     // --- 1. Crear usuario Admin (si no existe) ---
-    let adminUser = await UserModel.findOne({ where: { id: 1 } });
-    if (!adminUser) {
-      console.log("Creando usuario admin de ejemplo...");
-      adminUser = await UserModel.create({
-        id: 1,
-        name: "Admin Impulso",
-        email: "admin@impulso.com",
-        password: "admin123", // Hashear en producción
-        type: "admin",
-      });
-    }
+    // Nota: Al usar force: true, el usuario se borra, así que siempre se creará.
+    console.log("Creando usuario admin de ejemplo...");
+    let adminUser = await UserModel.create({
+      id: 1,
+      name: "Admin Impulso",
+      email: "admin@impulso.com",
+      password: "admin123", // Hashear en producción
+      type: "admin",
+    });
 
     // --- 2. Insertar Universidades ---
     console.log("Insertando universidades...");

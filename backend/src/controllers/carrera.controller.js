@@ -208,3 +208,40 @@ export const obtenerTodasLasCarrerasPublico = async (req, res) => {
       .json({ mensaje: "Error interno del servidor", error: error.message });
   }
 };
+// ... (importaciones y otras funciones)
+
+/**
+ * OBTENER UNA CARRERA POR ID (PÚBLICO)
+ * Incluye los datos de la universidad asociada.
+ */
+export const obtenerCarreraPorId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const carrera = await CarreraModel.findByPk(id, {
+      include: {
+        model: UniversidadModel,
+        attributes: [
+          "id",
+          "nombre",
+          "alias",
+          "provincia",
+          "tipo_gestion",
+          "logo_url",
+          "sitio_web",
+        ],
+        // Opcional: Si quieres que solo se vean carreras de U. verificadas incluso por ID directo
+        // where: { isVerified: true }
+      },
+    });
+
+    if (!carrera) {
+      return res.status(404).json({ mensaje: "Carrera no encontrada." });
+    }
+
+    res.status(200).json(carrera);
+  } catch (error) {
+    console.error("Error al obtener la carrera:", error);
+    res.status(500).json({ mensaje: "Error interno del servidor." });
+  }
+};

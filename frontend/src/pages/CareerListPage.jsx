@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
-// Importar useNavigate para la navegación a la página de detalles
-import { useNavigate } from "react-router"; // Usamos 'react-router' según tu configuración
-// ✅ Importación ajustada al nombre del archivo de servicio
-import { careersService } from "../services/careers.service";
-// ✅ Importación de useForm
+import { useNavigate } from "react-router";
+import { careerService } from "../services/career.service";
+import { universityService } from "../services/university.service";
 import { useForm } from "../hooks/useForm";
 
-// Opciones de filtro RIASEC (Holland)
 const riasecOptions = {
   R: "Realista",
   I: "Investigador",
@@ -16,7 +13,6 @@ const riasecOptions = {
   C: "Convencional",
 };
 
-// Áreas de estudio (basado en tu modelo)
 const areaOptions = [
   "Tecnología",
   "Salud",
@@ -26,78 +22,113 @@ const areaOptions = [
   "Ciencias Sociales",
 ];
 
-export const CareerListPage = () => {
-  // Inicializar useNavigate
+const tipoUniversidadOptions = ["Pública", "Privada"];
+const nivelOptions = ["Terciario", "Universitario", "Tecnicatura"];
+
+export const CareerListPage = ({ userRiasec = [] }) => {
   const navigate = useNavigate();
 
-  const [carreras, setCarreras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Usamos tu hook para manejar los filtros
-  const { values, handleChange, setValues } = useForm({
+  const [showUniversities, setShowUniversities] = useState(false);
+  const [onlyRiasec, setOnlyRiasec] = useState(false);
+
+  const [carreras, setCarreras] = useState([]);
+  const [universidades, setUniversidades] = useState([]);
+
+  const { values, handleChange } = useForm({
     search: "",
     area: "",
     tipo: "",
+    tipo_gestion: "",
+    nivel: "",
   });
 
-  // Estado para el filtro RIASEC (lo manejamos por separado para checkboxes)
-  const [riasecFilter, setRiasecFilter] = useState("");
-
-  // --- Lógica de la API ---
-
-  const fetchCareers = async (filters) => {
+  const fetchCareers = async () => {
     setLoading(true);
     try {
-      // Llama a: GET /api/carreras?search=...&area=...&tipo=...
-      // Recordatorio: El backend ya filtra por isVerified: true
-      const data = await careersService.getAllPublic(filters);
+      const filters = {
+        area: values.area,
+        tipo: values.tipo,
+      };
+
+      let data = await careerService.getAllPublic(filters);
+
+      // Filtrar RIASEC si corresponde
+      if (onlyRiasec && userRiasec.length > 0) {
+        data = data.filter((c) => {
+          const riasec = JSON.parse(c.perfiles_riasec_compatibles || "[]");
+          return riasec.some((r) => userRiasec.includes(r));
+        });
+      }
+
       setCarreras(data);
       setError(null);
     } catch (err) {
-      setError("Error al cargar las carreras. Intenta de nuevo más tarde.");
+      console.error(err);
+      setError("No se pudieron cargar las carreras.");
       setCarreras([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Función para manejar el clic y navegar a la página de detalles
-  const handleCareerClick = (careerId) => {
-    navigate(`/carreras/${careerId}`);
-  };
-
-  // Cargar al inicio y cuando cambian los filtros
-  useEffect(() => {
-    // Si no hay filtros RIASEC, solo usamos los filtros de texto
-    const filters = { ...values };
-
-    // Si tienes lógica avanzada para RIASEC, la aplicarías aquí
-    // Por ahora, aplicamos los filtros de texto
-    fetchCareers(filters);
-  }, [values]); // Re-ejecutar cuando cambia search, area o tipo
-
-  // Manejar búsqueda al enviar el formulario (o al cambiar un filtro)
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // El useEffect ya se encarga de llamar a fetchCareers cuando 'values' cambia
-  };
-
-  // ⚠️ Función helper para asegurar que RIASEC sea un array
-  const formatRiasec = (riasecJson) => {
-    if (!riasecJson) return [];
+  const fetchUniversities = async () => {
+    setLoading(true);
     try {
-      // Intenta parsear
-      const parsed = JSON.parse(riasecJson);
-      // Asegura que sea un array antes de usar join. Si es un string u objeto simple, retorna array vacío.
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      // Si el JSON es inválido (por un error de la BD), retorna vacío
-      return [];
+      let data = await universityService.getAllPublic({
+        tipo_gestion: values.tipo_gestion,
+        nivel: values.nivel,
+      });
+
+      // Filtrar RIASEC si corresponde
+      if (onlyRiasec && userRiasec.length > 0) {
+        const filtered = [];
+        for (const uni of data) {
+          const uniCarreras = await careerService.getAllPublic({
+            universidadId: uni.id,
+          });
+          const match = uniCarreras.some((c) => {
+            const riasec = JSON.parse(c.perfiles_riasec_compatibles || "[]");
+            return riasec.some((r) => userRiasec.includes(r));
+          });
+          if (match) filtered.push(uni);
+        }
+        data = filtered;
+      }
+
+      setUniversidades(data);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudieron cargar las universidades.");
+      setUniversidades([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // --- Renderizado ---
+  useEffect(() => {
+    if (showUniversities) {
+      fetchUniversities();
+    } else {
+      fetchCareers();
+    }
+  }, [values, showUniversities, onlyRiasec]);
+
+  const handleCareerClick = (careerId) => navigate(`/carreras/${careerId}`);
+  const handleUniversityClick = (uniId) => navigate(`/universidades/${uniId}`);
+
+  const formatRiasec = (riasecJson) => {
+    if (!riasecJson) return [];
+    try {
+      const parsed = JSON.parse(riasecJson);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  };
 
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
@@ -105,176 +136,199 @@ export const CareerListPage = () => {
         Explorá Carreras y Universidades
       </h1>
 
+      {/* Switches */}
+      <div className="flex justify-center gap-4 mb-6">
+        <button
+          className={`px-4 py-2 rounded-lg font-semibold ${
+            showUniversities ? "bg-gray-200" : "bg-teal-600 text-white"
+          }`}
+          onClick={() => setShowUniversities(false)}
+        >
+          Carreras
+        </button>
+        <button
+          className={`px-4 py-2 rounded-lg font-semibold ${
+            showUniversities ? "bg-teal-600 text-white" : "bg-gray-200"
+          }`}
+          onClick={() => setShowUniversities(true)}
+        >
+          Universidades
+        </button>
+        <button
+          className={`px-4 py-2 rounded-lg font-semibold ${
+            onlyRiasec ? "bg-teal-600 text-white" : "bg-gray-200"
+          }`}
+          onClick={() => setOnlyRiasec(!onlyRiasec)}
+        >
+          Solo resultados RIASEC
+        </button>
+      </div>
+
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* --- COLUMNA DE FILTROS (IZQUIERDA) --- */}
+        {/* Filtros */}
         <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg h-fit sticky top-24">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">Filtros</h2>
-          <form onSubmit={handleSearch} className="space-y-4">
-            {/* Filtro de Búsqueda por Nombre */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Buscar por Nombre
-              </label>
-              <input
-                type="text"
-                name="search"
-                value={values.search}
-                onChange={handleChange}
-                placeholder="Ej: Programación, Abogacía"
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-
-            {/* Filtro por Área */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Área de Estudio
-              </label>
-              <select
-                name="area"
-                value={values.area}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              >
-                <option value="">Todas las Áreas</option>
-                {areaOptions.map((area) => (
-                  <option key={area} value={area}>
-                    {area}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Filtro por Tipo */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de Carrera
-              </label>
-              <select
-                name="tipo"
-                value={values.tipo}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              >
-                <option value="">Todos los Tipos</option>
-                <option value="Grado">Grado</option>
-                <option value="Tecnicatura">Tecnicatura</option>
-                <option value="Posgrado">Posgrado</option>
-              </select>
-            </div>
-
-            {/* Filtro RIASEC (Explicativo) */}
-            <div className="pt-4 border-t border-gray-100">
-              <h3 className="text-lg font-semibold text-teal-700 mb-2">
-                Filtrar por Perfil RIASEC
-              </h3>
-              <p className="text-sm text-gray-500 mb-3">
-                (Requiere haber completado el test vocacional)
-              </p>
-              <div className="space-y-2">
-                {Object.entries(riasecOptions).map(([key, name]) => (
-                  <div key={key} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="riasec"
-                      id={`riasec-${key}`}
-                      value={key}
-                      // Aquí usarías setRiasecFilter para cambiar el estado
-                      // Esto es solo para mostrar, la lógica avanzada es compleja
-                      disabled
-                      className="text-teal-600 focus:ring-teal-500 cursor-not-allowed"
-                    />
-                    <label
-                      htmlFor={`riasec-${key}`}
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      {name} ({key})
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Este botón ya no es necesario, pero lo dejamos por si acaso */}
-            <button
-              type="submit"
-              className="w-full bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 mt-4 hidden"
-            >
-              Aplicar Filtros
-            </button>
-          </form>
+          <div className="space-y-4">
+            {!showUniversities && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Buscar
+                  </label>
+                  <input
+                    type="text"
+                    name="search"
+                    value={values.search}
+                    onChange={handleChange}
+                    placeholder="Ej: Programación"
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Área
+                  </label>
+                  <select
+                    name="area"
+                    value={values.area}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Todas</option>
+                    {areaOptions.map((area) => (
+                      <option key={area} value={area}>
+                        {area}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tipo
+                  </label>
+                  <select
+                    name="tipo"
+                    value={values.tipo}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Todos</option>
+                    <option value="Grado">Grado</option>
+                    <option value="Tecnicatura">Tecnicatura</option>
+                    <option value="Posgrado">Posgrado</option>
+                  </select>
+                </div>
+              </>
+            )}
+            {showUniversities && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tipo de gestión
+                  </label>
+                  <select
+                    name="tipo_gestion"
+                    value={values.tipo_gestion}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Todos</option>
+                    {tipoUniversidadOptions.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nivel
+                  </label>
+                  <select
+                    name="nivel"
+                    value={values.nivel}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Todos</option>
+                    {nivelOptions.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* --- COLUMNA DE RESULTADOS (DERECHA) --- */}
+        {/* Resultados */}
         <div className="lg:col-span-3">
-          {/* Estados de Carga y Error */}
-          {loading && (
-            <p className="text-center text-gray-500 text-lg">
-              Cargando ofertas académicas...
-            </p>
-          )}
-          {error && (
-            <p className="text-center text-red-500 bg-red-100 p-4 rounded-lg">
-              {error}
-            </p>
-          )}
+          {loading && <p className="text-center text-gray-500">Cargando...</p>}
+          {error && <p className="text-center text-red-500">{error}</p>}
 
-          {/* Lista de Resultados */}
           <div className="grid gap-6 md:grid-cols-2">
             {!loading &&
+              !showUniversities &&
               carreras.map((carrera) => (
                 <div
                   key={carrera.id}
-                  // Hacemos la tarjeta cliqueable para navegar a los detalles
                   onClick={() => handleCareerClick(carrera.id)}
-                  className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all cursor-pointer" // Añadido cursor-pointer
+                  className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all cursor-pointer"
                 >
-                  {/* Título y Link */}
                   <h3 className="text-xl font-bold text-gray-900 mb-1">
                     {carrera.nombre}
                   </h3>
-
-                  {/* Universidad */}
                   {carrera.Universidad && (
-                    <p className="text-base font-semibold text-indigo-600">
-                      {carrera.Universidad.nombre} ({carrera.Universidad.alias})
-                    </p>
+                    <div className="flex items-center mt-2 mb-3">
+                      {carrera.Universidad.logo_url ? (
+                        <img
+                          src={carrera.Universidad.logo_url}
+                          alt={carrera.Universidad.alias}
+                          className="w-8 h-8 rounded-full mr-2 object-cover border border-gray-200"
+                          onError={(e) => (e.target.style.display = "none")}
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full mr-2 bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xs border border-teal-200">
+                          {carrera.Universidad.alias
+                            ? carrera.Universidad.alias.substring(0, 2)
+                            : "U"}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-semibold text-indigo-600">
+                          {carrera.Universidad.nombre}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {carrera.Universidad.provincia}
+                        </p>
+                      </div>
+                    </div>
                   )}
-
-                  <p className="text-gray-600 mt-3 line-clamp-3">
+                  <p className="text-gray-600 text-sm mt-2 line-clamp-3">
                     {carrera.descripcion}
                   </p>
-
-                  {/* Detalles y Tags */}
-                  <div className="mt-4 flex flex-wrap gap-2 text-sm">
-                    <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-medium">
+                  <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                    <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
                       {carrera.tipo}
                     </span>
-                    <span className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full font-medium">
+                    <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded-full">
                       {carrera.duracion_anios} Años
                     </span>
-                    <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-medium">
-                      Área: {carrera.area_estudio}
-                    </span>
-
-                    {/* ⚠️ LÓGICA RIASEC CORREGIDA */}
                     {carrera.perfiles_riasec_compatibles && (
-                      <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full font-medium">
-                        RIASEC:{" "}
+                      <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
                         {formatRiasec(carrera.perfiles_riasec_compatibles).join(
                           ", "
                         )}
                       </span>
                     )}
                   </div>
-
-                  {/* Link de Acción (Ej. Ver más) */}
                   <div className="mt-4 pt-4 border-t border-gray-100 text-right">
                     <a
                       href={carrera.link_inscripcion}
                       target="_blank"
                       rel="noopener noreferrer"
-                      // Importante: detener la propagación para que no active handleCareerClick
                       onClick={(e) => e.stopPropagation()}
                       className="text-teal-600 hover:underline font-semibold"
                     >
@@ -283,15 +337,45 @@ export const CareerListPage = () => {
                   </div>
                 </div>
               ))}
+
+            {!loading &&
+              showUniversities &&
+              universidades.map((uni) => (
+                <div
+                  key={uni.id}
+                  onClick={() => handleUniversityClick(uni.id)}
+                  className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all cursor-pointer"
+                >
+                  {uni.logo_url ? (
+                    <img
+                      src={uni.logo_url}
+                      alt={uni.alias}
+                      className="w-12 h-12 rounded-full mb-2 object-cover border border-gray-200"
+                      onError={(e) => (e.target.style.display = "none")}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full mb-2 bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xs border border-teal-200">
+                      {uni.alias ? uni.alias.substring(0, 2) : "U"}
+                    </div>
+                  )}
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {uni.nombre}
+                  </h3>
+                  <p className="text-sm text-gray-500">{uni.provincia}</p>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Tipo: {uni.tipo_gestion}
+                  </p>
+                </div>
+              ))}
           </div>
 
-          {/* Mensaje de "No hay resultados" */}
-          {!loading && !error && carreras.length === 0 && (
-            <p className="text-center text-gray-500 text-lg p-8 bg-white rounded-lg shadow">
-              No se encontraron carreras que coincidan con tu búsqueda o tu
-              universidad no está verificada.
-            </p>
-          )}
+          {!loading &&
+            ((showUniversities && universidades.length === 0) ||
+              (!showUniversities && carreras.length === 0)) && (
+              <p className="text-center text-gray-500 p-8">
+                No se encontraron resultados.
+              </p>
+            )}
         </div>
       </div>
     </div>

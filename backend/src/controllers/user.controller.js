@@ -1,28 +1,26 @@
 import { UserModel } from "../models/user.model.js";
 
+// Obtener perfil del usuario logueado
 export const obtenerPerfil = async (req, res) => {
   try {
-    // El ID del usuario se adjuntó al objeto req por el middleware verificarUsuario
-    const userId = req.usuario.id; // Buscar el usuario por ID
+    const userId = req.usuario.id;
 
     const usuario = await UserModel.findByPk(userId, {
-      // Opcional: Excluye datos sensibles como la contraseña
       attributes: { exclude: ["password", "createdAt", "updatedAt"] },
     });
 
-    if (!usuario) {
+    if (!usuario)
       return res
         .status(404)
         .json({ error: "Perfil de usuario no encontrado." });
-    } // Devolver los datos del perfil
 
     return res.status(200).json({
       mensaje: "Datos de perfil obtenidos correctamente",
       perfil: {
         id: usuario.id,
-        name: usuario.name, // <-- CORREGIDO: Añadido el nombre
+        name: usuario.name,
         email: usuario.email,
-        type: usuario.type, // ¡CORREGIDO! Cambiado de mbtiType a riasecProfile
+        type: usuario.type,
         riasecProfile: usuario.riasecProfile,
       },
     });
@@ -32,25 +30,23 @@ export const obtenerPerfil = async (req, res) => {
   }
 };
 
+// Listar todos los usuarios
 export const getAllUsers = async (req, res) => {
   try {
     const usuarios = await UserModel.findAll({
       attributes: { exclude: ["password"] },
     });
-
     res.status(200).json({ usuarios });
   } catch (error) {
     res.status(500).json({ mensaje: "Error al listar usuarios.", error });
   }
 };
 
-// --- NUEVA FUNCIÓN PARA GUARDAR RESULTADO RIASEC ---
+// Guardar resultado vocacional RIASEC
 export const saveVocationalResult = async (req, res) => {
-  // Asumimos que req.usuario.id es inyectado por tu middleware 'verificarUsuario'
   const userId = req.usuario.id;
-  const { riasecProfile } = req.body; // Recibimos el nuevo perfil RIASEC
+  const { riasecProfile } = req.body;
 
-  // Validación simple
   if (
     !riasecProfile ||
     (riasecProfile.length !== 3 && riasecProfile.length !== 0)
@@ -62,14 +58,10 @@ export const saveVocationalResult = async (req, res) => {
 
   try {
     const user = await UserModel.findByPk(userId);
-
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "Usuario no encontrado." });
-    }
 
-    // Actualizamos el campo 'riasecProfile' en el usuario
     user.riasecProfile = riasecProfile.toUpperCase();
-
     await user.save();
 
     res.status(200).json({

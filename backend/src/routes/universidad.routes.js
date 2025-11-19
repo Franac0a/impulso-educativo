@@ -3,8 +3,9 @@ import {
   crearUniversidad,
   obtenerMisCarreras,
   obtenerTodasLasUniversidadesPublico,
-  obtenerMiInstitucion, // Controlador para /mi-perfil
+  obtenerMiInstitucion,
   actualizarMiInstitucion,
+  obtenerUniversidadPorId, // ✅ NUEVO CONTROLADOR
 } from "../controllers/universidad.controller.js";
 import {
   verificarUsuario,
@@ -14,35 +15,35 @@ import { uploadDocumento } from "../config/multer.js";
 
 export const universidadRoutes = Router();
 
-// --- RUTA PÚBLICA ---
-// GET /api/universidades
+// --- RUTAS PÚBLICAS ---
+
+// GET /api/universidades → todas las universidades públicas
 universidadRoutes.get("/", obtenerTodasLasUniversidadesPublico);
+
+// GET /api/universidades/:id → universidad pública por ID con sus carreras
+universidadRoutes.get("/:id", obtenerUniversidadPorId);
 
 // --- RUTAS PROTEGIDAS (DASHBOARD) ---
 
 // 1. OBTENER MI INSTITUCIÓN
 // GET /api/universidades/mi-perfil
-// ⚠️ ESTA ES LA RUTA QUE FALTABA O ESTABA MAL ESCRITA
 universidadRoutes.get(
   "/mi-perfil",
   verificarUsuario,
   soloUniversidad,
-  obtenerMiInstitucion // Usa el controlador que busca la institución por userId
+  obtenerMiInstitucion
 );
 
 // 2. CREAR INSTITUCIÓN (POST con archivo)
-// POST /api/universidades/
 universidadRoutes.post(
   "/",
   verificarUsuario,
   soloUniversidad,
-  // Middleware de Multer para manejar la subida del documento
   uploadDocumento.single("documento_verificacion"),
   crearUniversidad
 );
 
 // 3. ACTUALIZAR INSTITUCIÓN (PUT)
-// PUT /api/universidades/
 universidadRoutes.put(
   "/",
   verificarUsuario,
