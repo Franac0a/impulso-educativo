@@ -101,19 +101,6 @@ export const UniversityProfilePage = ({ userRiasec = [] }) => {
               {university.biografia || "Sin biografía disponible."}
             </p>
           </div>
-
-          <div className="mt-6">
-            <button
-              onClick={() => setOnlyRiasec(!onlyRiasec)}
-              className={`w-full px-4 py-2 rounded-lg font-semibold ${
-                onlyRiasec ? "bg-teal-600 text-white" : "bg-gray-200"
-              }`}
-            >
-              {onlyRiasec
-                ? "Mostrar todas las carreras"
-                : "Mostrar solo carreras RIASEC"}
-            </button>
-          </div>
         </div>
 
         {/* Carreras */}

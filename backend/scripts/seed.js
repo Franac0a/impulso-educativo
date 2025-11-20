@@ -7,6 +7,7 @@ import { UniversidadModel } from "../src/models/universidades.model.js";
 import { CarreraModel } from "../src/models/carreras.model.js";
 import { UserModel } from "../src/models/user.model.js";
 import { InscripcionModel } from "../src/models/inscripcion.model.js";
+// import {logo.jpg} from '../../frontend/src/assets/img/logo.jpg.js';
 
 // --- Datos de Ejemplo ---
 
@@ -34,7 +35,7 @@ const universidadesData = [
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
     logo_url:
-      "https://www.unf.edu.ar/wp-content/uploads/2018/09/Logo-UNaF-Color.png",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/UNaFLogoI.jpg/330px-UNaFLogoI.jpg",
     nivel: "Universitario",
   },
   {
@@ -45,7 +46,7 @@ const universidadesData = [
     sitio_web: "https://www.ipf.edu.ar/", // Revisa si esta URL es correcta
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
-    logo_url: "https://www.ipf.edu.ar/assets/img/logo.png",
+    logo_url: "https://www.ipf.edu.ar/img/logo_institucional.jpg",
     nivel: "Tecnicatura",
   },
   // --- NUEVAS INSTITUCIONES ---
@@ -54,10 +55,11 @@ const universidadesData = [
     alias: "ISFDAC", // O "Macedo Martínez" si prefieres
     tipo_gestion: "Pública",
     provincia: "Formosa",
-    sitio_web: "http://isfdcabrera-for.infd.edu.ar/sitio/", // Revisa si esta URL es correcta
+    sitio_web: "hhttps://isfdcytcabrera-for.infd.edu.ar/sitio/", // Revisa si esta URL es correcta
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
-    // logo_url: null, // Sin logo para probar el fallback
+    logo_url:
+      "https://isfdcytcabrera-for.infd.edu.ar/sitio/wp-content/uploads/2021/03/PNG.png",
     nivel: "Terciario",
   },
   {
@@ -65,10 +67,11 @@ const universidadesData = [
     alias: "UCP",
     tipo_gestion: "Privada",
     provincia: "Formosa",
-    sitio_web: "https://ucp.edu.ar/sede-formosa/", // Revisa si esta URL es correcta
+    sitio_web: "https://www.ucp.edu.ar/sedes/formosa/", // Revisa si esta URL es correcta
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
-    logo_url: "https://ucp.edu.ar/wp-content/uploads/2020/06/Logo-UCP.png",
+    logo_url:
+      "blob:https://web.whatsapp.com/fb6d8974-eea9-4754-8c7c-69f896e6719b",
     nivel: "Universitario",
   },
 ];
@@ -118,7 +121,7 @@ const sembrarDatos = async () => {
     });
     const getIdByAlias = (alias) => {
       const found = uniInstances.find((u) => u.alias === alias);
-      if (!found) throw new Error(`No se encontró ID para ${alias}`);
+      if (!found) throw new Error("No se encontró ID para ${alias}");
       return found.id;
     };
 
@@ -138,7 +141,7 @@ const sembrarDatos = async () => {
         tipo: "Tecnicatura",
         area_estudio: "Tecnología",
         duracion_anios: 2,
-        perfiles_riasec_compatibles: JSON.stringify(["I", "R", "C"]), // Investigador, Realista, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["S", "E", "C"]), // Investigador, Realista, Convencional
         universidadId: utnId,
       },
       {
@@ -166,7 +169,7 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Salud",
         duracion_anios: 4,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "R", "I"]), // Social, Realista, Investigador
+        perfiles_riasec_compatibles: JSON.stringify(["S", "E"]), // Social, Realista, Investigador
         universidadId: unafId,
       },
       // IPF
@@ -197,7 +200,7 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Ciencias Exactas",
         duracion_anios: 4,
-        perfiles_riasec_compatibles: JSON.stringify(["I", "S"]), // Investigador, Social
+        perfiles_riasec_compatibles: JSON.stringify(["E", "S"]), // Investigador, Social
         universidadId: unafId,
       },
       {
@@ -247,7 +250,7 @@ const sembrarDatos = async () => {
         tipo: "Tecnicatura",
         area_estudio: "Tecnología",
         duracion_anios: 3,
-        perfiles_riasec_compatibles: JSON.stringify(["R", "I"]), // Realista, Investigador
+        perfiles_riasec_compatibles: JSON.stringify(["E", "I"]), // Realista, Investigador
         universidadId: ipfId,
       },
       {
@@ -268,7 +271,7 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Humanidades",
         duracion_anios: 4,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "A", "C"]), // Social, Artístico, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["S", "E", "C"]), // Social, Artístico, Convencional
         universidadId: isfdacId,
       },
       {
@@ -286,7 +289,7 @@ const sembrarDatos = async () => {
         tipo: "Tecnicatura",
         area_estudio: "Humanidades",
         duracion_anios: 3,
-        perfiles_riasec_compatibles: JSON.stringify(["C", "S", "A"]), // Convencional, Social, Artístico
+        perfiles_riasec_compatibles: JSON.stringify(["C", "S", "E"]), // Convencional, Social, Artístico
         universidadId: isfdacId,
       },
       {
@@ -336,7 +339,7 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Salud",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "I"]), // Social, Investigador
+        perfiles_riasec_compatibles: JSON.stringify(["S", "E"]), // Social, Investigador
         universidadId: ucpId,
       },
     ];
@@ -347,7 +350,7 @@ const sembrarDatos = async () => {
 
     console.log("---------------------------------");
     console.log(
-      `¡Base de datos sembrada con éxito! (${carrerasData.length} carreras con perfiles RIASEC). Todas las universidades del seed están verificadas.`
+      "¡Base de datos sembrada con éxito! (${carrerasData.length} carreras con perfiles RIASEC). Todas las universidades del seed están verificadas."
     );
     console.log("---------------------------------");
   } catch (error) {

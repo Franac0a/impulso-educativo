@@ -477,17 +477,6 @@ export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
                       </span>
                     )}
                   </div>
-                  <div className="mt-4 pt-4 border-t border-gray-100 text-right">
-                    <button
-                      className="text-teal-600 hover:text-teal-800 font-semibold text-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(carrera.link_inscripcion, "_blank");
-                      }}
-                    >
-                      Ver Sitio Web &rarr;
-                    </button>
-                  </div>
                 </div>
               ))}
 
