@@ -71,11 +71,7 @@ const universidadesData = [
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
     logo_url:
-<<<<<<< HEAD
-      "blob:https://web.whatsapp.com/fb6d8974-eea9-4754-8c7c-69f896e6719b",
-=======
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR326rsQqrewpy4Nvxqb27Zs0cNsp6asFvyzg&s%22",
->>>>>>> d5f9e40e78019ced5baa7afc6dca926ef25b1167
     nivel: "Universitario",
   },
 ];
