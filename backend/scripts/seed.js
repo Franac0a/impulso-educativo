@@ -34,7 +34,7 @@ const universidadesData = [
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
     logo_url:
-      "https://www.unf.edu.ar/wp-content/uploads/2018/09/Logo-UNaF-Color.png",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/UNaFLogoI.jpg/330px-UNaFLogoI.jpg",
     nivel: "Universitario",
   },
   {
@@ -45,7 +45,7 @@ const universidadesData = [
     sitio_web: "https://www.ipf.edu.ar/", // Revisa si esta URL es correcta
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
-    logo_url: "https://www.ipf.edu.ar/assets/img/logo.png",
+    logo_url: "https://www.ipf.edu.ar/img/logo_institucional.jpg",
     nivel: "Tecnicatura",
   },
   // --- NUEVAS INSTITUCIONES ---
@@ -57,7 +57,8 @@ const universidadesData = [
     sitio_web: "http://isfdcabrera-for.infd.edu.ar/sitio/", // Revisa si esta URL es correcta
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
-    // logo_url: null, // Sin logo para probar el fallback
+    logo_url:
+      "https://isfdcytcabrera-for.infd.edu.ar/sitio/wp-content/uploads/2021/03/PNG.png",
     nivel: "Terciario",
   },
   {
@@ -68,7 +69,8 @@ const universidadesData = [
     sitio_web: "https://ucp.edu.ar/sede-formosa/", // Revisa si esta URL es correcta
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
-    logo_url: "https://ucp.edu.ar/wp-content/uploads/2020/06/Logo-UCP.png",
+    logo_url:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR326rsQqrewpy4Nvxqb27Zs0cNsp6asFvyzg&s%22",
     nivel: "Universitario",
   },
 ];
