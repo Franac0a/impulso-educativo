@@ -48,7 +48,7 @@ export const DashboardPage = () => {
             to="/dashboard/crear-perfil"
             className="w-full inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-lg hover:bg-green-700 transition"
           >
-            Crear Perfil de Institución
+            Crear Perfil
           </Link>
         </div>
       </div>

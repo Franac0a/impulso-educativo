@@ -120,7 +120,7 @@ export const CreateCareerPage = () => {
           to="/dashboard" // (Debería ser /dashboard/perfil-institucion cuando exista)
           className="mt-6 inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg"
         >
-          Crear Perfil de Institución
+          Crear Perfil de la Institución
         </Link>
       </div>
     );

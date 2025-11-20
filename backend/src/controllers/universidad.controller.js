@@ -6,7 +6,14 @@ import { Op } from "sequelize";
  * CREAR UNA NUEVA UNIVERSIDAD (CON DOCUMENTO ADJUNTO)
  */
 export const crearUniversidad = async (req, res) => {
+  console.log("data ", req.body);
+  console.log("file ", req.file);
+
   try {
+    if (!req.body) {
+      return res.status(400).json({ mensaje: "No se enviaron datos." });
+    }
+
     const {
       nombre,
       alias,
@@ -14,6 +21,7 @@ export const crearUniversidad = async (req, res) => {
       provincia,
       sitio_web,
       tipo_documento,
+      nivel,
     } = req.body;
 
     const ruta_documento = req.file ? req.file.path : null;
@@ -44,6 +52,7 @@ export const crearUniversidad = async (req, res) => {
       tipo_documento_verificacion: tipo_documento,
       ruta_documento_verificacion: ruta_documento,
       isVerified: false,
+      nivel,
     });
 
     res.status(201).json({
@@ -71,7 +80,9 @@ export const obtenerMisCarreras = async (req, res) => {
     });
 
     if (!universidad) {
-      return res.status(404).json({ mensaje: "Universidad no encontrada." });
+      return res.status(404).json({
+        mensaje: "Universidad no encontrada de obtener mis carreras.",
+      });
     }
 
     const carreras = await CarreraModel.findAll({
@@ -162,6 +173,7 @@ export const actualizarMiInstitucion = async (req, res) => {
     institucion.tipo_gestion = tipo_gestion || institucion.tipo_gestion;
     institucion.provincia = provincia || institucion.provincia;
     institucion.sitio_web = sitio_web || institucion.sitio_web;
+    institucion.nivel = req.body.nivel || institucion.nivel;
 
     await institucion.save();
 
@@ -185,6 +197,8 @@ export const obtenerUniversidadPorId = async (req, res) => {
   try {
     const { id } = req.params;
 
+    console.log("id ", id);
+
     const universidad = await UniversidadModel.findOne({
       where: { id, isVerified: true },
       include: [
@@ -196,7 +210,9 @@ export const obtenerUniversidadPorId = async (req, res) => {
     });
 
     if (!universidad) {
-      return res.status(404).json({ mensaje: "Universidad no encontrada." });
+      return res
+        .status(404)
+        .json({ mensaje: "Universidad no encontrada por id" });
     }
 
     res.status(200).json(universidad);

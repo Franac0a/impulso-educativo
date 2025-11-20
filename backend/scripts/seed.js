@@ -23,6 +23,7 @@ const universidadesData = [
     // Puedes agregar logo_url aquí si lo deseas para probar las imágenes
     logo_url:
       "https://upload.wikimedia.org/wikipedia/commons/6/67/UTN_logo.jpg",
+    nivel: "Universitario",
   },
   {
     nombre: "Universidad Nacional de Formosa",
@@ -34,6 +35,7 @@ const universidadesData = [
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
     logo_url:
       "https://www.unf.edu.ar/wp-content/uploads/2018/09/Logo-UNaF-Color.png",
+    nivel: "Universitario",
   },
   {
     nombre: "Instituto Politécnico de Formosa",
@@ -44,6 +46,7 @@ const universidadesData = [
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
     logo_url: "https://www.ipf.edu.ar/assets/img/logo.png",
+    nivel: "Tecnicatura",
   },
   // --- NUEVAS INSTITUCIONES ---
   {
@@ -55,6 +58,7 @@ const universidadesData = [
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
     // logo_url: null, // Sin logo para probar el fallback
+    nivel: "Terciario",
   },
   {
     nombre: "Universidad de la Cuenca del Plata - Sede Formosa",
@@ -65,6 +69,7 @@ const universidadesData = [
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
     logo_url: "https://ucp.edu.ar/wp-content/uploads/2020/06/Logo-UCP.png",
+    nivel: "Universitario",
   },
 ];
 

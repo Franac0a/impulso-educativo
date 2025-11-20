@@ -24,7 +24,7 @@ export const careerService = {
    * Obtiene las carreras de la institución logueada.
    */
   getMyCareers: async () => {
-    const response = await careerApi.get("/carreras/mis-carreras");
+    const response = await careerApi.get("/carreras/mis-carreras-user");
     return response.data;
   },
 
@@ -41,6 +41,24 @@ export const careerService = {
    */
   getById: async (id) => {
     const response = await careerApi.get(`/carreras/${id}`);
+    return response.data;
+  },
+
+  /**
+   * 🔵 EDITAR CARRERA
+   */
+  update: async (id, data) => {
+    const response = await careerApi.put(`/carreras/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await careerApi.delete(`/carreras/${id}`);
+    return response.data;
+  },
+
+  getCarreraPorUniversidad: async (id) => {
+    const response = await careerApi.get(`/carreras/universidad/${id}`);
     return response.data;
   },
 };

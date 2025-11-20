@@ -45,8 +45,7 @@ export const getAllUsers = async (req, res) => {
 // Guardar resultado vocacional RIASEC
 export const saveVocationalResult = async (req, res) => {
   const userId = req.usuario.id;
-  const { riasecProfile } = req.body;
-
+  const riasecProfile = req.body.riasec;
   if (
     !riasecProfile ||
     (riasecProfile.length !== 3 && riasecProfile.length !== 0)

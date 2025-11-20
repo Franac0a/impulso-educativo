@@ -17,6 +17,7 @@ export const userService = {
 };
 
 export const saveVocationalResult = async (riasecProfile) => {
+  console.log("Guardando perfil RIASEC:", riasecProfile);
   if (!riasecProfile || riasecProfile.length !== 3) {
     throw new Error("Formato de perfil RIASEC inválido.");
   }
@@ -26,7 +27,7 @@ export const saveVocationalResult = async (riasecProfile) => {
     { riasec: riasecProfile },
     { withCredentials: true }
   );
-
+  console.log("Respuesta del servidor:", response.data);
   return response.data;
 };
 

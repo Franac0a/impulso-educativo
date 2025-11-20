@@ -5,7 +5,7 @@ import { verificarUsuario } from "../middlewares/auth.middleware.js";
 export const testResultadoRoutes = Router();
 
 testResultadoRoutes.post(
-  "/save-mbti-result",
+  "/save-vocational-result",
   verificarUsuario,
   guardarResultado
 );

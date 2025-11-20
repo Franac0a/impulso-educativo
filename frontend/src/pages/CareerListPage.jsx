@@ -37,14 +37,25 @@ export const CareerListPage = ({ userRiasec = [] }) => {
   const [carreras, setCarreras] = useState([]);
   const [universidades, setUniversidades] = useState([]);
 
+  // Filtros de carreras
   const { values, handleChange } = useForm({
     search: "",
     area: "",
     tipo: "",
+  });
+
+  // Filtros de universidades
+  const [uniFilters, setUniFilters] = useState({
     tipo_gestion: "",
     nivel: "",
   });
 
+  const handleUniversityChange = (e) => {
+    const { name, value } = e.target;
+    setUniFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Fetch carreras
   const fetchCareers = async () => {
     setLoading(true);
     try {
@@ -55,7 +66,6 @@ export const CareerListPage = ({ userRiasec = [] }) => {
 
       let data = await careerService.getAllPublic(filters);
 
-      // Filtrar RIASEC si corresponde
       if (onlyRiasec && userRiasec.length > 0) {
         data = data.filter((c) => {
           const riasec = JSON.parse(c.perfiles_riasec_compatibles || "[]");
@@ -74,28 +84,36 @@ export const CareerListPage = ({ userRiasec = [] }) => {
     }
   };
 
+  // Fetch universidades
   const fetchUniversities = async () => {
     setLoading(true);
     try {
-      let data = await universityService.getAllPublic({
-        tipo_gestion: values.tipo_gestion,
-        nivel: values.nivel,
-      });
+      // Traigo todas las universidades
+      let data = await universityService.getAllPublic();
+
+      // Filtrar por frontend (tipo_gestion y nivel)
+      if (uniFilters.tipo_gestion) {
+        data = data.filter((u) => u.tipo_gestion === uniFilters.tipo_gestion);
+      }
+      if (uniFilters.nivel) {
+        data = data.filter((u) => u.nivel === uniFilters.nivel);
+      }
 
       // Filtrar RIASEC si corresponde
       if (onlyRiasec && userRiasec.length > 0) {
-        const filtered = [];
-        for (const uni of data) {
-          const uniCarreras = await careerService.getAllPublic({
-            universidadId: uni.id,
-          });
-          const match = uniCarreras.some((c) => {
-            const riasec = JSON.parse(c.perfiles_riasec_compatibles || "[]");
-            return riasec.some((r) => userRiasec.includes(r));
-          });
-          if (match) filtered.push(uni);
-        }
-        data = filtered;
+        const filtered = await Promise.all(
+          data.map(async (uni) => {
+            const uniCarreras = await careerService.getAllPublic({
+              universidadId: uni.id,
+            });
+            const match = uniCarreras.some((c) => {
+              const riasec = JSON.parse(c.perfiles_riasec_compatibles || "[]");
+              return riasec.some((r) => userRiasec.includes(r));
+            });
+            return match ? uni : null;
+          })
+        );
+        data = filtered.filter(Boolean);
       }
 
       setUniversidades(data);
@@ -109,13 +127,15 @@ export const CareerListPage = ({ userRiasec = [] }) => {
     }
   };
 
+  // useEffect separado según vista
   useEffect(() => {
     if (showUniversities) {
       fetchUniversities();
     } else {
       fetchCareers();
     }
-  }, [values, showUniversities, onlyRiasec]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values, uniFilters, showUniversities, onlyRiasec]);
 
   const handleCareerClick = (careerId) => navigate(`/carreras/${careerId}`);
   const handleUniversityClick = (uniId) => navigate(`/universidades/${uniId}`);
@@ -228,8 +248,8 @@ export const CareerListPage = ({ userRiasec = [] }) => {
                   </label>
                   <select
                     name="tipo_gestion"
-                    value={values.tipo_gestion}
-                    onChange={handleChange}
+                    value={uniFilters.tipo_gestion}
+                    onChange={handleUniversityChange}
                     className="w-full p-2 border border-gray-300 rounded-lg"
                   >
                     <option value="">Todos</option>
@@ -246,8 +266,8 @@ export const CareerListPage = ({ userRiasec = [] }) => {
                   </label>
                   <select
                     name="nivel"
-                    value={values.nivel}
-                    onChange={handleChange}
+                    value={uniFilters.nivel}
+                    onChange={handleUniversityChange}
                     className="w-full p-2 border border-gray-300 rounded-lg"
                   >
                     <option value="">Todos</option>
@@ -365,6 +385,9 @@ export const CareerListPage = ({ userRiasec = [] }) => {
                   <p className="text-xs text-gray-600 mt-2">
                     Tipo: {uni.tipo_gestion}
                   </p>
+                  {uni.nivel && (
+                    <p className="text-xs text-gray-600">Nivel: {uni.nivel}</p>
+                  )}
                 </div>
               ))}
           </div>

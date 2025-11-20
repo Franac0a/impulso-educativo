@@ -8,7 +8,9 @@ export const agregarInscripcion = async (req, res) => {
 
     const carrera = await CarreraModel.findByPk(careerId);
     if (!carrera)
-      return res.status(404).json({ mensaje: "Carrera no encontrada." });
+      return res
+        .status(404)
+        .json({ mensaje: "Carrera no encontrada al agregar inscripción." });
 
     const universidad = await UniversidadModel.findOne({
       where: { userId: req.usuario.id },

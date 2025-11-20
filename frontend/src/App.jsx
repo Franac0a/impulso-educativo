@@ -18,6 +18,7 @@ import { CareerListPage } from "./pages/CareerListPage";
 import { ContactPage } from "./pages/ContactPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { MyCareersPage } from "./pages/MyCareersPage";
+import { EditCareerPage } from "./pages/EditCarreraPage";
 import { CreateCareerPage } from "./pages/CreateCareerPage";
 import { CreateInstitutionPage } from "./pages/CreateInstitutionPage";
 import { EditInstitutionPage } from "./pages/EditInstitutionPage";
@@ -73,6 +74,10 @@ export const App = () => {
             <Route
               path="/dashboard/crear-carrera"
               element={<CreateCareerPage />}
+            />
+            <Route
+              path="/dashboard/editar-carrera/:id"
+              element={<EditCareerPage />}
             />
             <Route
               path="/dashboard/crear-perfil"

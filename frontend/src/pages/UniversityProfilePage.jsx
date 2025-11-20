@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router";
 import { universityService } from "../services/university.service";
-import { careerService } from "../services/career.service";
 
 const riasecOptions = {
   R: "Realista",
@@ -34,10 +33,12 @@ export const UniversityProfilePage = ({ userRiasec = [] }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      // Traemos la universidad junto con sus carreras
       const uni = await universityService.getById(id);
       setUniversity(uni);
 
-      let uniCarreras = await careerService.getAllPublic({ universidadId: id });
+      // Ahora las carreras vienen dentro de uni.Carreras
+      let uniCarreras = uni.Carreras || [];
 
       if (onlyRiasec && userRiasec.length > 0) {
         uniCarreras = uniCarreras.filter((c) => {

@@ -1,6 +1,7 @@
 import { api } from "./api";
 
 const UNIV_URL = "/universidades";
+const UNIV_ADMIN_URL = "/universidadesAdmin";
 
 export const universityService = {
   /**
@@ -30,6 +31,13 @@ export const universityService = {
     return response.data;
   },
 
+  /* Mi perfil admin */
+
+  getMyInstitution: async () => {
+    const response = await api.get(`${UNIV_ADMIN_URL}/mi-perfil-admin`);
+    return response.data;
+  },
+
   /**
    * Actualizar mi institución (usuario logueado)
    * PUT /api/universidades/mi-perfil
@@ -45,9 +53,16 @@ export const universityService = {
    * 'formData' debe ser un FormData si incluye archivos
    */
   createInstitution: async (formData) => {
-    const response = await api.post(UNIV_URL, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    console.log("formservice ", formData);
+    // Enviamos FormData al endpoint correcto. No forzamos el header
+    // 'Content-Type' para que el navegador agregue el boundary necesario.
+    const response = await api.post(
+      `${UNIV_ADMIN_URL}/crear-universidad`,
+      formData,
+      {
+        headers: { "Content-Type": undefined },
+      }
+    );
     return response.data;
   },
 

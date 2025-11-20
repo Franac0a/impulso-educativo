@@ -11,6 +11,22 @@ export const MyCareersPage = () => {
   const [error, setError] = useState(null);
   const { user } = useAuth(); // Para dar la bienvenida
 
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "¿Seguro que deseas eliminar esta carrera?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await careerService.delete(id);
+
+      // Actualizamos el estado filtrando la que se eliminó
+      setCarreras((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      alert("Error al eliminar la carrera.");
+    }
+  };
+
   useEffect(() => {
     const fetchMyCareers = async () => {
       try {
@@ -92,10 +108,16 @@ export const MyCareersPage = () => {
                       {carrera.duracion_anios} años
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-indigo-600 hover:text-indigo-900">
+                      <Link
+                        to={`/dashboard/editar-carrera/${carrera.id}`}
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
                         Editar
-                      </button>
-                      <button className="text-red-600 hover:text-red-900 ml-4">
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(carrera.id)}
+                        className="text-red-600 hover:text-red-900 ml-4"
+                      >
                         Eliminar
                       </button>
                     </td>

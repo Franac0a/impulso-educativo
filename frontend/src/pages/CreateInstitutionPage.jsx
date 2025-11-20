@@ -29,6 +29,7 @@ const validateInstitution = (values) => {
 
 export const CreateInstitutionPage = () => {
   const navigate = useNavigate();
+  const niveles = ["Terciario", "Universitario", "Tecnicatura"];
 
   // ⚠️ ¡CORRECCIÓN EN ESTA LÍNEA! setValues se incluye correctamente.
   const {
@@ -47,6 +48,7 @@ export const CreateInstitutionPage = () => {
     sitio_web: "",
     tipo_documento: "",
     documento_archivo: null, // Aquí guardaremos el archivo
+    nivel: "",
   });
 
   // handleFileChange usa setValues para guardar el archivo
@@ -68,23 +70,25 @@ export const CreateInstitutionPage = () => {
     try {
       const data = new FormData();
 
-      // Adjuntamos todos los campos de texto
+      // Campos de texto
       data.append("nombre", formData.nombre);
       data.append("alias", formData.alias);
       data.append("tipo_gestion", formData.tipo_gestion);
       data.append("provincia", formData.provincia);
-      data.append("sitio_web", formData.sitio_web);
+      data.append("sitio_web", formData.sitio_web || ""); // por si está vacío
       data.append("tipo_documento", formData.tipo_documento);
+      data.append("nivel", formData.nivel || ""); // opcional
 
-      // Adjuntamos el archivo (req.file)
-      data.append("documento_verificacion", formData.documento_archivo);
+      // Archivo
+      if (formData.documento_archivo) {
+        data.append("documento_verificacion", formData.documento_archivo);
+      }
 
       await universityService.createInstitution(data);
 
-      // Redirigimos al dashboard y el banner hará el resto
+      // Redirigimos al Dashboard después de crear el perfil
       navigate("/dashboard");
     } catch (err) {
-      // Manejar la respuesta de error de Axios
       const errorMessage =
         err.response?.data?.mensaje ||
         err.message ||
@@ -100,7 +104,7 @@ export const CreateInstitutionPage = () => {
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-xl p-8">
         <h1 className="text-3xl font-bold text-indigo-700 mb-2">
-          Crear Perfil de Institución
+          Crear Institución
         </h1>
         <p className="text-gray-600 mb-6">
           Completa los datos públicos de tu institución y adjunta la
@@ -295,6 +299,34 @@ export const CreateInstitutionPage = () => {
               <p className="text-red-500 text-xs italic mt-1">
                 {errors.documento_archivo}
               </p>
+            )}
+          </div>
+
+          {/* Nivel */}
+          <div>
+            <label
+              className="block text-sm font-bold text-gray-700 mb-2"
+              htmlFor="nivel"
+            >
+              Nivel
+            </label>
+            <select
+              name="nivel"
+              id="nivel"
+              value={values.nivel}
+              onChange={handleChange}
+              className={`shadow border rounded w-full py-2 px-3 text-gray-700 ${
+                errors.nivel ? "border-red-500" : "border-gray-300"
+              }`}
+            >
+              {niveles.map((nivel) => (
+                <option key={nivel} value={nivel}>
+                  {nivel}
+                </option>
+              ))}
+            </select>
+            {errors.nivel && (
+              <p className="text-red-500 text-xs italic mt-1">{errors.nivel}</p>
             )}
           </div>
 

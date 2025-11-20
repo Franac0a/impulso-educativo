@@ -45,7 +45,10 @@ export const UniversidadModel = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true, // Puede ser nulo si no suben logo
     },
-
+    nivel: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     // 'userId' (la llave foránea) se crea automáticamente por la relación
   },
   {

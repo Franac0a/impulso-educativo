@@ -11,6 +11,7 @@ import { universidadRoutes } from "./src/routes/universidad.routes.js";
 import { testResultadoRoutes } from "./src/routes/testResultado.routes.js";
 import path from "path"; // ⚠️ NUEVA IMPORTACIÓN
 import { fileURLToPath } from "url"; // ⚠️ NUEVA IMPORTACIÓN
+import { universidadesAdmin } from "./src/routes/universidad.admin.routes.js";
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/carreras", carreraRoutes);
 app.use("/api/inscripciones", inscripcionRoutes);
 app.use("/api/universidades", universidadRoutes);
+app.use("/api/universidadesAdmin", universidadesAdmin);
 app.use("/api", testResultadoRoutes);
 
 // Sincronización de modelos con la base de datos

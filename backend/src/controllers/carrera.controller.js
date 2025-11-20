@@ -109,7 +109,9 @@ export const editarCarrera = async (req, res) => {
     // 1. Buscar la carrera
     const carrera = await CarreraModel.findByPk(id);
     if (!carrera) {
-      return res.status(404).json({ mensaje: "Carrera no encontrada." });
+      return res
+        .status(404)
+        .json({ mensaje: "Carrera no encontrada al editar." });
     }
 
     // 2. Verificar permisos (Chequeo de seguridad)
@@ -142,7 +144,9 @@ export const eliminarCarrera = async (req, res) => {
     // 1. Buscar la carrera
     const carrera = await CarreraModel.findByPk(id);
     if (!carrera) {
-      return res.status(404).json({ mensaje: "Carrera no encontrada." });
+      return res
+        .status(404)
+        .json({ mensaje: "Carrera no encontrada al eliminar." });
     }
 
     // 2. Verificar permisos (Chequeo de seguridad)
@@ -218,6 +222,8 @@ export const obtenerCarreraPorId = async (req, res) => {
   try {
     const { id } = req.params;
 
+    console.log("id ", id);
+
     const carrera = await CarreraModel.findByPk(id, {
       include: {
         model: UniversidadModel,
@@ -236,12 +242,66 @@ export const obtenerCarreraPorId = async (req, res) => {
     });
 
     if (!carrera) {
-      return res.status(404).json({ mensaje: "Carrera no encontrada." });
+      return res
+        .status(404)
+        .json({ mensaje: "Carrera no encontrada al obtener por id." });
     }
 
     res.status(200).json(carrera);
   } catch (error) {
     console.error("Error al obtener la carrera:", error);
     res.status(500).json({ mensaje: "Error interno del servidor." });
+  }
+};
+
+/**
+ * OBTENER CARRERAS POR UNIVERSIDAD (PÚBLICO)
+ * - Trae las universidades disponibles y luego filtra por el `id` recibido
+ *   en `req.params` para devolver las carreras relacionadas con esa universidad.
+ */
+export const obtenerCarrerasPorUniversidad = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const universidad = await UniversidadModel.findOne({
+      where: { id }, // <--- quitamos isVerified
+      attributes: [
+        "id",
+        "nombre",
+        "alias",
+        "provincia",
+        "tipo_gestion",
+        "logo_url",
+        "sitio_web",
+        "nivel",
+      ],
+      include: [
+        {
+          model: CarreraModel,
+          attributes: [
+            "id",
+            "nombre",
+            "descripcion",
+            "tipo",
+            "area_estudio",
+            "duracion_anios",
+            "perfiles_riasec_compatibles",
+          ],
+        },
+      ],
+    });
+
+    if (!universidad) {
+      return res.status(404).json({
+        mensaje: "Universidad no encontrada para mostrar las carreras de ella.",
+      });
+    }
+
+    res.status(200).json(universidad);
+  } catch (error) {
+    console.error("Error al obtener carreras por universidad:", error);
+    res
+      .status(500)
+      .json({ mensaje: "Error interno del servidor", error: error.message });
   }
 };
