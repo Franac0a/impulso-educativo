@@ -71,7 +71,7 @@ const universidadesData = [
     userId: 1,
     isVerified: true, // <--- CAMBIO: Aprobada en el seed
     logo_url:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR326rsQqrewpy4Nvxqb27Zs0cNsp6asFvyzg&s%22",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR326rsQqrewpy4Nvxqb27Zs0cNsp6asFvyzg&s",
     nivel: "Universitario",
   },
 ];

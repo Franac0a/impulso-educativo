@@ -104,7 +104,7 @@ export const AboutSection = () => {
           <div>
             {/* ⚠️ Reemplazá esto por una foto tuya si querés, o dejá la de placeholder */}
             <img
-              src="https://placehold.co/600x400/14B8A6/FFFFFF?text=El+Problema"
+              src="./public/persona_frustrada.jpg"
               alt="Estudiantes buscando información"
               className="rounded-lg shadow-xl"
             />

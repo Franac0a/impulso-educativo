@@ -1,258 +1,218 @@
-import React, { useEffect } from "react";
-// ⚠️ Importamos de 'react-router'
-import { useNavigate, Link } from "react-router";
-import { useForm } from "../hooks/useForm";
-import { useAuth } from "../context/AuthContext";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-// La lógica de validación, hooks, y submit no cambia en absoluto
-const validateLogin = (values) => {
-  const errors = {};
-  if (!values.email) errors.email = "El email es requerido";
-  if (!values.password) errors.password = "La contraseña es requerida";
-  return errors;
-};
+import { useAuth } from "../context/AuthContext";
+import { useForm } from "../hooks/useForm";
+
+// import logoImg from "../assets/logo.png";
+const logoPlaceholder =
+  "https://cdn-icons-png.flaticon.com/512/3413/3413535.png"; // Borrar esto cuando tengas tu logo
 
 export const LoginPage = () => {
-  const { login, isAuthenticated, loading, userType } = useAuth();
   const navigate = useNavigate();
+  const { login } = useAuth(); // Asumimos que tu contexto expone una función 'login'
 
-  const { values, errors, handleChange, handleSubmit } = useForm({
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const { values, handleChange } = useForm({
     email: "",
     password: "",
   });
 
-  useEffect(() => {
-    if (loading) return;
-    if (isAuthenticated) {
-      navigate(userType === "universidad" ? "/dashboard" : "/");
-    }
-  }, [isAuthenticated, loading, navigate, userType]);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  const handleLogin = async (formData) => {
-    await login(formData.email, formData.password);
+    try {
+      // Lógica de login (ajusta según tu AuthContext)
+      await login(values.email, values.password);
+      navigate("/"); // Redirigir al home o dashboard
+    } catch (err) {
+      console.error(err);
+      setError("Credenciales inválidas. Por favor, intenta nuevamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const onSubmit = handleSubmit(handleLogin, validateLogin);
-
-  // --- ⚠️ A PARTIR DE AQUÍ COMIENZA EL NUEVO DISEÑO ---
   return (
-    // Fondo general de la página (un verde muy claro)
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-green-100 flex items-center justify-center p-4">
-      {/* La Card Principal */}
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-md w-full">
-        {/* 1. Encabezado Verde Degradado */}
-        <div className="bg-gradient-to-b from-teal-500 to-green-600 p-8 text-white text-center">
-          {/* Logo (Placeholder) */}
-          <div className="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center p-2 shadow-inner">
-            {/* Asumo que tenés un logo en /public/logo.svg */}
-            <img
-              src="/logo.svg"
-              alt="Logo Impulso Educativo"
-              onError={(e) => (e.target.style.display = "none")}
-            />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans relative overflow-hidden">
+      {/* Decoración de Fondo (Burbujas sutiles) */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-32 left-20 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 md:p-10 relative z-10 transform transition-all hover:scale-[1.01]">
+        {/* --- ESPACIO PARA EL LOGO --- */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 shadow-lg shadow-teal-500/40 mb-4 p-1">
+            <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
+              {/* ⚠️ AQUÍ VA TU LOGO */}
+              <img
+                src={logoPlaceholder} // Cambiar por tu variable importada (logoImg)
+                alt="Logo Impulso Educativo"
+                className="w-12 h-12 object-contain"
+              />
+            </div>
           </div>
-          <h1 className="text-2xl font-bold mt-4">Impulso Educativo</h1>
-          <p className="text-green-100">Bienvenido de vuelta</p>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            ¡Hola de nuevo!
+          </h2>
+          <p className="text-sm text-gray-500 mt-2">
+            Ingresa tus datos para continuar explorando.
+          </p>
         </div>
 
-        {/* 2. Cuerpo del Formulario (Blanco) */}
-        <div className="p-8">
-          <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
-            Iniciar Sesión
-          </h2>
-          <p className="text-gray-600 text-center mb-6">
-            Accede a tu cuenta para continuar
-          </p>
+        {/* Mensaje de Error */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg text-sm font-medium flex items-start animate-pulse">
+            <svg
+              className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {error}
+          </div>
+        )}
 
-          {/* Mostrar error de la API */}
-          {errors.api && (
-            <p className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm text-center">
-              {errors.api}
-            </p>
-          )}
-
-          <form onSubmit={onSubmit} className="space-y-5">
-            {/* Campo Email con Ícono */}
-            <div>
-              <label
-                className="block text-gray-700 text-sm font-bold mb-2"
-                htmlFor="email"
-              >
-                Correo electrónico
-              </label>
-              <div className="relative">
-                {/* Ícono de Email (SVG) */}
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <svg
-                    className="w-5 h-5 text-gray-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                  </svg>
-                </span>
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  value={values.email}
-                  onChange={handleChange}
-                  placeholder="tu@email.com"
-                  className={`pl-10 shadow-sm appearance-none border rounded w-full py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                    errors.email ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
+        <form onSubmit={handleLogin} className="space-y-6">
+          {/* Email */}
+          <div>
+            <label
+              className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1"
+              htmlFor="email"
+            >
+              Correo Electrónico
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                  />
+                </svg>
               </div>
-              {errors.email && (
-                <p className="text-red-500 text-xs italic mt-1">
-                  {errors.email}
-                </p>
-              )}
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={values.email}
+                onChange={handleChange}
+                required
+                placeholder="ejemplo@correo.com"
+                className="w-full pl-10 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-gray-700 placeholder-gray-400"
+              />
             </div>
+          </div>
 
-            {/* Campo Contraseña con Ícono */}
-            <div>
+          {/* Contraseña */}
+          <div>
+            <div className="flex justify-between items-center mb-1 ml-1">
               <label
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-xs font-bold text-gray-500 uppercase"
                 htmlFor="password"
               >
                 Contraseña
               </label>
-              <div className="relative">
-                {/* Ícono de Candado (SVG) */}
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <svg
-                    className="w-5 h-5 text-gray-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
-                </span>
-                <input
-                  type="password"
-                  name="password"
-                  id="password"
-                  value={values.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className={`pl-10 shadow-sm appearance-none border rounded w-full py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                    errors.password ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {/* (Falta el ícono del ojo para "mostrar contraseña", lo podemos añadir después) */}
-              </div>
-              {errors.password && (
-                <p className="text-red-500 text-xs italic mt-1">
-                  {errors.password}
-                </p>
-              )}
-            </div>
-
-            {/* Opciones (Recordarme / Olvidaste) */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center text-gray-600">
-                <input
-                  type="checkbox"
-                  className="mr-2 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                />
-                Recordarme
-              </label>
-              <a
-                href="#"
-                className="font-medium text-teal-600 hover:text-teal-500"
+              <Link
+                to="/forgot-password"
+                className="text-xs font-semibold text-teal-600 hover:text-teal-800 hover:underline"
               >
                 ¿Olvidaste tu contraseña?
-              </a>
+              </Link>
             </div>
-
-            {/* Botón de Submit */}
-            <button
-              type="submit"
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline flex items-center justify-center transition"
-            >
-              Iniciar Sesión
-              {/* Ícono de Flecha (SVG) */}
-              <svg
-                className="w-5 h-5 ml-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </button>
-          </form>
-
-          {/* "O continúa con" (Social Logins - Opcional) */}
-          <div className="mt-6">
             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  O continúa con
-                </span>
-              </div>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                {/* (Ícono de Google) */}
-                Google
-              </button>
-              <button className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                {/* (Ícono de Microsoft) */}
-                Microsoft
-              </button>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={values.password}
+                onChange={handleChange}
+                required
+                placeholder="••••••••"
+                className="w-full pl-10 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-gray-700 placeholder-gray-400"
+              />
             </div>
           </div>
 
-          {/* Link a Registro */}
-          <p className="mt-8 text-center text-sm text-gray-600">
-            ¿No tienes una cuenta?{" "}
+          {/* Botón Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-teal-500/30 transition-all transform hover:-translate-y-0.5 focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+          >
+            {loading ? (
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            ) : (
+              "Iniciar Sesión"
+            )}
+          </button>
+        </form>
+
+        <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+          <p className="text-sm text-gray-500">
+            ¿Aún no tienes una cuenta?{" "}
             <Link
               to="/register"
-              className="font-medium text-teal-600 hover:text-teal-500"
+              className="font-bold text-teal-600 hover:text-teal-800 hover:underline transition-colors"
             >
-              Regístrate aquí
+              Regístrate gratis
             </Link>
           </p>
-        </div>
-
-        {/* 3. Footer de la Card (Switch a Institución) */}
-        <div className="bg-gray-50 p-6 border-t border-gray-100">
-          <Link
-            to="/register"
-            className="flex items-center justify-center text-gray-700 hover:text-teal-600 transition"
-          >
-            {/* Ícono de Institución (SVG) */}
-            <svg
-              className="w-6 h-6 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0v-4m0 4h5m0 0v-4m0 4h5m0 0v-4m0 4h5M5 12h14M5 8h14"
-              ></path>
-            </svg>
-            <span className="font-semibold">
-              ¿Eres una institución educativa?
-            </span>
-          </Link>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
+// ⚠️ DESCOMENTA TUS IMPORTS:
 import { careerService } from "../services/career.service";
 import { universityService } from "../services/university.service";
 import { userService } from "../services/user.service";
@@ -19,10 +20,7 @@ const nivelOptions = ["Terciario", "Universitario", "Tecnicatura"];
 
 export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
   const navigate = useNavigate();
-
-  // Estado local para el perfil si no viene por props
   const [localUserRiasec, setLocalUserRiasec] = useState([]);
-  // Prioridad: Props > Local
   const userRiasec =
     propUserRiasec && propUserRiasec.length > 0
       ? propUserRiasec
@@ -45,79 +43,55 @@ export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
     setUniFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ---------------------------------------------------------
-  // 1. AUTOCARGA DEL PERFIL (Solución al cartel amarillo)
-  // ---------------------------------------------------------
+  // --- LOGIC: AUTOCARGA PERFIL ---
   useEffect(() => {
     const loadUserProfile = async () => {
-      // Si ya vino por props, no hacemos nada
       if (propUserRiasec && propUserRiasec.length > 0) return;
-
       try {
         const response = await userService.getProfile();
         const perfilData = response.perfil || response;
-
         if (perfilData && perfilData.riasecProfile) {
-          let parsedProfile = [];
-          const rawProfile = perfilData.riasecProfile;
-
-          // Función auxiliar para limpiar datos
-          const cleanUserRiasec = (input) => {
+          const clean = (input) => {
             if (Array.isArray(input)) return input;
             if (typeof input === "string") {
-              if (input.trim().startsWith("[")) {
+              if (input.trim().startsWith("["))
                 try {
                   return JSON.parse(input);
                 } catch (e) {}
-              }
               return input.includes(",")
                 ? input.split(",").map((s) => s.trim())
                 : input.split("");
             }
             return [];
           };
-
-          let temp = cleanUserRiasec(rawProfile);
-          if (typeof temp === "string") temp = cleanUserRiasec(temp); // Intento doble capa
-
+          let temp = clean(perfilData.riasecProfile);
+          if (typeof temp === "string") temp = clean(temp);
           if (Array.isArray(temp)) {
-            // Aplanamos y separamos strings cortos (ej: "RIA" -> "R","I","A")
-            parsedProfile = temp.flatMap((item) =>
-              typeof item === "string" && item.length > 1 && item.length <= 3
-                ? item.split("")
-                : item
+            setLocalUserRiasec(
+              temp.flatMap((i) =>
+                typeof i === "string" && i.length > 1 && i.length <= 3
+                  ? i.split("")
+                  : i
+              )
             );
           }
-          setLocalUserRiasec(parsedProfile);
         }
-      } catch (err) {
-        // Silencioso en producción o warning leve
-        // console.warn("No se pudo cargar perfil para filtro automático");
-      }
+      } catch (err) {}
     };
-
     loadUserProfile();
   }, [propUserRiasec]);
 
-  // ---------------------------------------------------------
-  // 2. FUNCIÓN DE PARSEO BLINDADA (Soporta JSON string doble)
-  // ---------------------------------------------------------
+  // --- LOGIC: PARSEO ---
   const formatRiasec = (riasecJson) => {
     if (!riasecJson) return [];
-
     let parsed = riasecJson;
-
-    // CAPA 1
     if (typeof parsed === "string") {
       try {
-        const clean = parsed.replace(/'/g, '"');
-        parsed = JSON.parse(clean);
+        parsed = JSON.parse(parsed.replace(/'/g, '"'));
       } catch (e) {
         return [];
       }
     }
-
-    // CAPA 2 (Doble Stringify)
     if (typeof parsed === "string") {
       try {
         parsed = JSON.parse(parsed);
@@ -125,53 +99,40 @@ export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
         return [];
       }
     }
-
-    // CAPA 3 (Validación final y Aplanado)
     if (Array.isArray(parsed)) {
-      return parsed.flatMap((item) => {
-        if (typeof item === "string" && item.length > 1 && item.length <= 3) {
-          return item.split("");
-        }
-        return item;
-      });
+      return parsed.flatMap((i) =>
+        typeof i === "string" && i.length > 1 && i.length <= 3 ? i.split("") : i
+      );
     }
     return [];
   };
 
-  // ---------------------------------------------------------
-  // 3. LÓGICA DE COINCIDENCIAS
-  // ---------------------------------------------------------
+  // --- LOGIC: MATCHING ---
   const checkRiasecMatch = (riasecJson, userProfile) => {
     if (!userProfile || userProfile.length === 0) return false;
-
     const carreraRiasec = formatRiasec(riasecJson);
     if (carreraRiasec.length === 0) return false;
-
     const userClean = userProfile.map((r) =>
       String(r).toUpperCase().trim().charAt(0)
     );
-
-    return carreraRiasec.some((r) => {
-      const carreraCode = String(r).toUpperCase().trim().charAt(0);
-      return userClean.includes(carreraCode);
-    });
+    return carreraRiasec.some((r) =>
+      userClean.includes(String(r).toUpperCase().trim().charAt(0))
+    );
   };
 
-  // ---------------------------------------------------------
-  // 4. FETCH DE DATOS
-  // ---------------------------------------------------------
+  // --- LOGIC: FETCH ---
   const fetchCareers = async () => {
     setLoading(true);
     setRiasecWarning(null);
     try {
-      const filters = { area: values.area, tipo: values.tipo };
-      let data = await careerService.getAllPublic(filters);
-
+      let data = await careerService.getAllPublic({
+        area: values.area,
+        tipo: values.tipo,
+      });
       if (values.search) {
         const searchLower = values.search.toLowerCase();
         data = data.filter((c) => c.nombre.toLowerCase().includes(searchLower));
       }
-
       if (onlyRiasec) {
         if (!userRiasec || userRiasec.length === 0) {
           setRiasecWarning(
@@ -187,7 +148,6 @@ export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
       setCarreras(data);
       setError(null);
     } catch (err) {
-      console.error(err);
       setError("No se pudieron cargar las carreras.");
       setCarreras([]);
     } finally {
@@ -204,7 +164,6 @@ export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
         data = data.filter((u) => u.tipo_gestion === uniFilters.tipo_gestion);
       if (uniFilters.nivel)
         data = data.filter((u) => u.nivel === uniFilters.nivel);
-
       if (onlyRiasec) {
         if (!userRiasec || userRiasec.length === 0) {
           setRiasecWarning(
@@ -233,7 +192,6 @@ export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
       setUniversidades(data);
       setError(null);
     } catch (err) {
-      console.error(err);
       setError("No se pudieron cargar las universidades.");
       setUniversidades([]);
     } finally {
@@ -242,11 +200,8 @@ export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
   };
 
   useEffect(() => {
-    if (showUniversities) {
-      fetchUniversities();
-    } else {
-      fetchCareers();
-    }
+    if (showUniversities) fetchUniversities();
+    else fetchCareers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     values,
@@ -256,292 +211,403 @@ export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
     JSON.stringify(userRiasec),
   ]);
 
-  const handleCareerClick = (careerId) => navigate(`/carreras/${careerId}`);
-  const handleUniversityClick = (uniId) => navigate(`/universidades/${uniId}`);
+  const handleCareerClick = (id) => navigate(`/carreras/${id}`);
+  const handleUniversityClick = (id) => navigate(`/universidades/${id}`);
 
+  // --- RENDER ---
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-teal-700 mb-6 text-center">
-        Explorá Carreras y Universidades
-      </h1>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
+      {/* TITULO PRINCIPAL */}
+      <div className="text-center mb-10 pt-20 md:pt-24">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
+          Explorá tu Futuro
+        </h1>
+        <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+          Descubrí la oferta académica de Formosa filtrada especialmente para
+          vos.
+        </p>
+      </div>
 
-      <div className="flex justify-center gap-4 mb-6">
+      {/* BARRA DE NAVEGACIÓN Y FILTRO RIASEC */}
+      <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-10">
+        <div className="bg-white p-1 rounded-full shadow-sm border border-gray-200 inline-flex">
+          <button
+            className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+              !showUniversities
+                ? "bg-teal-600 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
+            onClick={() => setShowUniversities(false)}
+          >
+            Carreras
+          </button>
+          <button
+            className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+              showUniversities
+                ? "bg-teal-600 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
+            onClick={() => setShowUniversities(true)}
+          >
+            Universidades
+          </button>
+        </div>
+
         <button
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-            !showUniversities
-              ? "bg-teal-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-          onClick={() => setShowUniversities(false)}
-        >
-          Carreras
-        </button>
-        <button
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-            showUniversities
-              ? "bg-teal-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-          onClick={() => setShowUniversities(true)}
-        >
-          Universidades
-        </button>
-        <button
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors border-2 ${
+          className={`px-6 py-2 rounded-full text-sm font-bold border-2 transition-all duration-200 flex items-center gap-2 ${
             onlyRiasec
-              ? "bg-teal-100 text-teal-800 border-teal-500"
-              : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"
+              ? "bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm"
+              : "bg-white border-gray-200 text-gray-600 hover:border-indigo-300"
           }`}
           onClick={() => setOnlyRiasec(!onlyRiasec)}
         >
-          {onlyRiasec ? "Filtro RIASEC Activo ✓" : "Solo resultados RIASEC"}
+          {onlyRiasec ? (
+            <>
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+              </span>
+              Filtro RIASEC Activo
+            </>
+          ) : (
+            <>
+              <span></span> Solo compatibles con mi Test
+            </>
+          )}
         </button>
       </div>
 
       {onlyRiasec && riasecWarning && (
-        <div className="max-w-2xl mx-auto mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">{riasecWarning}</p>
-            </div>
+        <div className="max-w-2xl mx-auto mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg shadow-sm">
+          <div className="flex items-center">
+            <span className="text-2xl mr-3">⚠️</span>
+            <p className="text-sm text-yellow-800 font-medium">
+              {riasecWarning}
+            </p>
           </div>
         </div>
       )}
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* FILTROS */}
-        <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg h-fit sticky top-24">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Filtros</h2>
-          <div className="space-y-4">
-            {!showUniversities && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Buscar
-                  </label>
-                  <input
-                    type="text"
-                    name="search"
-                    value={values.search}
-                    onChange={handleChange}
-                    placeholder="Ej: Programación"
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Área
-                  </label>
-                  <select
-                    name="area"
-                    value={values.area}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Todas</option>
-                    {areaOptions.map((area) => (
-                      <option key={area} value={area}>
-                        {area}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo
-                  </label>
-                  <select
-                    name="tipo"
-                    value={values.tipo}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Todos</option>
-                    <option value="Grado">Grado</option>
-                    <option value="Tecnicatura">Tecnicatura</option>
-                    <option value="Posgrado">Posgrado</option>
-                  </select>
-                </div>
-              </>
-            )}
-            {showUniversities && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo de gestión
-                  </label>
-                  <select
-                    name="tipo_gestion"
-                    value={uniFilters.tipo_gestion}
-                    onChange={handleUniversityChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Todos</option>
-                    {tipoUniversidadOptions.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nivel
-                  </label>
-                  <select
-                    name="nivel"
-                    value={uniFilters.nivel}
-                    onChange={handleUniversityChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Todos</option>
-                    {nivelOptions.map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
+        {/* --- SIDEBAR FILTROS --- */}
+        <div className="lg:col-span-1">
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 sticky top-28">
+            <h2 className="text-lg font-bold mb-5 text-gray-800 flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-teal-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
+              </svg>
+              Filtrar por:
+            </h2>
+            <div className="space-y-5">
+              {!showUniversities && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                      Buscar
+                    </label>
+                    <input
+                      type="text"
+                      name="search"
+                      value={values.search}
+                      onChange={handleChange}
+                      placeholder="Ej: Programación"
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                      Área de Estudio
+                    </label>
+                    <select
+                      name="area"
+                      value={values.area}
+                      onChange={handleChange}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-sm text-gray-700 cursor-pointer"
+                    >
+                      <option value="">Todas las áreas</option>
+                      {areaOptions.map((area) => (
+                        <option key={area} value={area}>
+                          {area}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                      Tipo de Título
+                    </label>
+                    <select
+                      name="tipo"
+                      value={values.tipo}
+                      onChange={handleChange}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-sm text-gray-700 cursor-pointer"
+                    >
+                      <option value="">Todos</option>
+                      <option value="Grado">Grado</option>
+                      <option value="Tecnicatura">Tecnicatura</option>
+                      <option value="Posgrado">Posgrado</option>
+                    </select>
+                  </div>
+                </>
+              )}
+              {showUniversities && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                      Gestión
+                    </label>
+                    <select
+                      name="tipo_gestion"
+                      value={uniFilters.tipo_gestion}
+                      onChange={handleUniversityChange}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-sm text-gray-700 cursor-pointer"
+                    >
+                      <option value="">Todas</option>
+                      {tipoUniversidadOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                      Nivel Educativo
+                    </label>
+                    <select
+                      name="nivel"
+                      value={uniFilters.nivel}
+                      onChange={handleUniversityChange}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-sm text-gray-700 cursor-pointer"
+                    >
+                      <option value="">Todos</option>
+                      {nivelOptions.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* RESULTADOS */}
+        {/* --- GRID RESULTADOS --- */}
         <div className="lg:col-span-3">
           {loading && (
-            <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-12 h-12 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-400 font-medium">
+                Cargando resultados...
+              </p>
             </div>
           )}
 
           {error && (
-            <p className="text-center text-red-500 bg-red-50 p-4 rounded-lg">
+            <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-center">
               {error}
-            </p>
+            </div>
           )}
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
+            {/* CARD CARRERA */}
             {!loading &&
               !showUniversities &&
               carreras.map((carrera) => (
                 <div
                   key={carrera.id}
                   onClick={() => handleCareerClick(carrera.id)}
-                  className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all cursor-pointer hover:-translate-y-1"
+                  className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-teal-100 transition-all duration-300 cursor-pointer flex flex-col h-full overflow-hidden transform hover:-translate-y-1"
                 >
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">
-                    {carrera.nombre}
-                  </h3>
-                  {carrera.Universidad && (
-                    <div className="flex items-center mt-2 mb-3">
-                      {carrera.Universidad.logo_url ? (
-                        <img
-                          src={carrera.Universidad.logo_url}
-                          alt={carrera.Universidad.alias}
-                          className="w-8 h-8 rounded-full mr-2 object-cover border border-gray-200"
-                          onError={(e) => (e.target.style.display = "none")}
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full mr-2 bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xs border border-teal-200">
-                          {carrera.Universidad.alias
-                            ? carrera.Universidad.alias.substring(0, 2)
-                            : "U"}
+                  <div className="p-6 flex-grow">
+                    {carrera.Universidad && (
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                          {carrera.Universidad.logo_url ? (
+                            <img
+                              src={carrera.Universidad.logo_url}
+                              alt="Logo"
+                              className="w-full h-full object-cover"
+                              onError={(e) => (e.target.style.display = "none")}
+                            />
+                          ) : (
+                            <span className="text-xs font-bold text-teal-600">
+                              {carrera.Universidad.alias?.substring(0, 2) ||
+                                "U"}
+                            </span>
+                          )}
                         </div>
-                      )}
-                      <div>
-                        <p className="text-sm font-semibold text-indigo-600">
-                          {carrera.Universidad.nombre}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {carrera.Universidad.provincia}
-                        </p>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-teal-600 uppercase tracking-wider truncate">
+                            {carrera.Universidad.alias || "Universidad"}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {carrera.Universidad.provincia}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  <p className="text-gray-600 text-sm mt-2 line-clamp-3">
-                    {carrera.descripcion}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                    <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full border border-indigo-200">
-                      {carrera.tipo}
-                    </span>
-                    <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded-full border border-teal-200">
-                      {carrera.duracion_anios} Años
-                    </span>
-                    {carrera.perfiles_riasec_compatibles && (
-                      <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full border border-purple-200">
-                        {formatRiasec(carrera.perfiles_riasec_compatibles).join(
-                          ", "
-                        )}
-                      </span>
                     )}
+
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 leading-tight group-hover:text-teal-700 transition-colors">
+                      {carrera.nombre}
+                    </h3>
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-4">
+                      {carrera.descripcion}
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 mt-auto">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        {carrera.tipo}
+                      </span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-teal-50 text-teal-700 border border-teal-100">
+                        {carrera.duracion_anios} Años
+                      </span>
+                      {carrera.perfiles_riasec_compatibles && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100 gap-1">
+                          <svg
+                            className="w-3 h-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          {formatRiasec(
+                            carrera.perfiles_riasec_compatibles
+                          ).join(", ")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-end">
+                    <span className="text-sm font-bold text-teal-600 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                      Ver detalles{" "}
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
+                      </svg>
+                    </span>
                   </div>
                 </div>
               ))}
 
+            {/* CARD UNIVERSIDAD */}
             {!loading &&
               showUniversities &&
               universidades.map((uni) => (
                 <div
                   key={uni.id}
                   onClick={() => handleUniversityClick(uni.id)}
-                  className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all cursor-pointer hover:-translate-y-1"
+                  className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-indigo-100 transition-all duration-300 cursor-pointer flex items-center p-6 transform hover:-translate-y-1"
                 >
-                  <div className="flex items-center mb-4">
+                  <div className="w-16 h-16 rounded-xl bg-white border border-gray-100 shadow-sm flex-shrink-0 flex items-center justify-center overflow-hidden mr-5">
                     {uni.logo_url ? (
                       <img
                         src={uni.logo_url}
                         alt={uni.alias}
-                        className="w-16 h-16 rounded-full object-cover border border-gray-200"
+                        className="w-full h-full object-contain p-1"
                         onError={(e) => (e.target.style.display = "none")}
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xl border border-teal-200">
+                      <span className="text-xl font-bold text-indigo-600">
                         {uni.alias ? uni.alias.substring(0, 2) : "U"}
-                      </div>
-                    )}
-                    <div className="ml-4">
-                      <h3 className="text-lg font-bold text-gray-900 leading-tight">
-                        {uni.nombre}
-                      </h3>
-                      <p className="text-sm text-gray-500">{uni.provincia}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <span className="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded">
-                      {uni.tipo_gestion}
-                    </span>
-                    {uni.nivel && (
-                      <span className="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded">
-                        {uni.nivel}
                       </span>
                     )}
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1 truncate group-hover:text-indigo-700 transition-colors">
+                      {uni.nombre}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                        {uni.provincia}
+                      </span>
+                      <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                        {uni.tipo_gestion}
+                      </span>
+                      {uni.nivel && (
+                        <span className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded">
+                          {uni.nivel}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 ml-4 text-gray-300 group-hover:text-indigo-500 transition-colors">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
                   </div>
                 </div>
               ))}
           </div>
+
+          {/* ESTADO VACÍO */}
           {!loading &&
             !error &&
             ((showUniversities && universidades.length === 0) ||
               (!showUniversities && carreras.length === 0)) && (
-              <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-100">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <p className="mt-4 text-lg text-gray-500">
-                  No se encontraron resultados.
+              <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-50 mb-6">
+                  <svg
+                    className="w-10 h-10 text-gray-300"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  No encontramos resultados
+                </h3>
+                <p className="text-gray-500 max-w-xs mx-auto">
+                  Intenta ajustar los filtros o tu búsqueda para ver más
+                  opciones.
                 </p>
+                {onlyRiasec && (
+                  <button
+                    onClick={() => setOnlyRiasec(false)}
+                    className="mt-6 text-teal-600 font-bold text-sm hover:underline"
+                  >
+                    Desactivar filtro RIASEC
+                  </button>
+                )}
               </div>
             )}
         </div>

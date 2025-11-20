@@ -175,8 +175,11 @@ export const VocationalTestPage = () => {
               <p>
                 🚀 <span className="text-yellow-300 font-bold">Recordá:</span>{" "}
                 Una vez finalizado el test, dirigite a la sección de
-                <span className="font-bold text-white"> Carreras</span> y usá
-                los filtros inteligentes para encontrar tu afinidad ideal.
+                <span className="font-bold text-white">
+                  {" "}
+                  "Explorar Ofertas"
+                </span>{" "}
+                y usá los filtros inteligentes para encontrar tu afinidad ideal.
               </p>
             </div>
 
