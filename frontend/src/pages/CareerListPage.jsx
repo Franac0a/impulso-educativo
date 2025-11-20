@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+
 import { careerService } from "../services/career.service";
 import { universityService } from "../services/university.service";
+import { userService } from "../services/user.service";
 import { useForm } from "../hooks/useForm";
-
-const riasecOptions = {
-  R: "Realista",
-  I: "Investigador",
-  A: "Artístico",
-  S: "Social",
-  E: "Emprendedor",
-  C: "Convencional",
-};
 
 const areaOptions = [
   "Tecnología",
@@ -21,58 +14,176 @@ const areaOptions = [
   "Ciencias Exactas",
   "Ciencias Sociales",
 ];
-
 const tipoUniversidadOptions = ["Pública", "Privada"];
 const nivelOptions = ["Terciario", "Universitario", "Tecnicatura"];
 
-export const CareerListPage = ({ userRiasec = [] }) => {
+export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
   const navigate = useNavigate();
+
+  // Estado local para el perfil si no viene por props
+  const [localUserRiasec, setLocalUserRiasec] = useState([]);
+  // Prioridad: Props > Local
+  const userRiasec =
+    propUserRiasec && propUserRiasec.length > 0
+      ? propUserRiasec
+      : localUserRiasec;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [showUniversities, setShowUniversities] = useState(false);
   const [onlyRiasec, setOnlyRiasec] = useState(false);
+  const [riasecWarning, setRiasecWarning] = useState(null);
 
   const [carreras, setCarreras] = useState([]);
   const [universidades, setUniversidades] = useState([]);
 
-  // Filtros de carreras
-  const { values, handleChange } = useForm({
-    search: "",
-    area: "",
-    tipo: "",
-  });
-
-  // Filtros de universidades
-  const [uniFilters, setUniFilters] = useState({
-    tipo_gestion: "",
-    nivel: "",
-  });
+  const { values, handleChange } = useForm({ search: "", area: "", tipo: "" });
+  const [uniFilters, setUniFilters] = useState({ tipo_gestion: "", nivel: "" });
 
   const handleUniversityChange = (e) => {
     const { name, value } = e.target;
     setUniFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Fetch carreras
+  // ---------------------------------------------------------
+  // 1. AUTOCARGA DEL PERFIL (Solución al cartel amarillo)
+  // ---------------------------------------------------------
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      // Si ya vino por props, no hacemos nada
+      if (propUserRiasec && propUserRiasec.length > 0) return;
+
+      try {
+        const response = await userService.getProfile();
+        const perfilData = response.perfil || response;
+
+        if (perfilData && perfilData.riasecProfile) {
+          let parsedProfile = [];
+          const rawProfile = perfilData.riasecProfile;
+
+          // Función auxiliar para limpiar datos
+          const cleanUserRiasec = (input) => {
+            if (Array.isArray(input)) return input;
+            if (typeof input === "string") {
+              if (input.trim().startsWith("[")) {
+                try {
+                  return JSON.parse(input);
+                } catch (e) {}
+              }
+              return input.includes(",")
+                ? input.split(",").map((s) => s.trim())
+                : input.split("");
+            }
+            return [];
+          };
+
+          let temp = cleanUserRiasec(rawProfile);
+          if (typeof temp === "string") temp = cleanUserRiasec(temp); // Intento doble capa
+
+          if (Array.isArray(temp)) {
+            // Aplanamos y separamos strings cortos (ej: "RIA" -> "R","I","A")
+            parsedProfile = temp.flatMap((item) =>
+              typeof item === "string" && item.length > 1 && item.length <= 3
+                ? item.split("")
+                : item
+            );
+          }
+          setLocalUserRiasec(parsedProfile);
+        }
+      } catch (err) {
+        // Silencioso en producción o warning leve
+        // console.warn("No se pudo cargar perfil para filtro automático");
+      }
+    };
+
+    loadUserProfile();
+  }, [propUserRiasec]);
+
+  // ---------------------------------------------------------
+  // 2. FUNCIÓN DE PARSEO BLINDADA (Soporta JSON string doble)
+  // ---------------------------------------------------------
+  const formatRiasec = (riasecJson) => {
+    if (!riasecJson) return [];
+
+    let parsed = riasecJson;
+
+    // CAPA 1
+    if (typeof parsed === "string") {
+      try {
+        const clean = parsed.replace(/'/g, '"');
+        parsed = JSON.parse(clean);
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // CAPA 2 (Doble Stringify)
+    if (typeof parsed === "string") {
+      try {
+        parsed = JSON.parse(parsed);
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // CAPA 3 (Validación final y Aplanado)
+    if (Array.isArray(parsed)) {
+      return parsed.flatMap((item) => {
+        if (typeof item === "string" && item.length > 1 && item.length <= 3) {
+          return item.split("");
+        }
+        return item;
+      });
+    }
+    return [];
+  };
+
+  // ---------------------------------------------------------
+  // 3. LÓGICA DE COINCIDENCIAS
+  // ---------------------------------------------------------
+  const checkRiasecMatch = (riasecJson, userProfile) => {
+    if (!userProfile || userProfile.length === 0) return false;
+
+    const carreraRiasec = formatRiasec(riasecJson);
+    if (carreraRiasec.length === 0) return false;
+
+    const userClean = userProfile.map((r) =>
+      String(r).toUpperCase().trim().charAt(0)
+    );
+
+    return carreraRiasec.some((r) => {
+      const carreraCode = String(r).toUpperCase().trim().charAt(0);
+      return userClean.includes(carreraCode);
+    });
+  };
+
+  // ---------------------------------------------------------
+  // 4. FETCH DE DATOS
+  // ---------------------------------------------------------
   const fetchCareers = async () => {
     setLoading(true);
+    setRiasecWarning(null);
     try {
-      const filters = {
-        area: values.area,
-        tipo: values.tipo,
-      };
-
+      const filters = { area: values.area, tipo: values.tipo };
       let data = await careerService.getAllPublic(filters);
 
-      if (onlyRiasec && userRiasec.length > 0) {
-        data = data.filter((c) => {
-          const riasec = JSON.parse(c.perfiles_riasec_compatibles || "[]");
-          return riasec.some((r) => userRiasec.includes(r));
-        });
+      if (values.search) {
+        const searchLower = values.search.toLowerCase();
+        data = data.filter((c) => c.nombre.toLowerCase().includes(searchLower));
       }
 
+      if (onlyRiasec) {
+        if (!userRiasec || userRiasec.length === 0) {
+          setRiasecWarning(
+            "No detectamos resultados de tu test vocacional. ¿Ya lo realizaste?"
+          );
+          data = [];
+        } else {
+          data = data.filter((c) =>
+            checkRiasecMatch(c.perfiles_riasec_compatibles, userRiasec)
+          );
+        }
+      }
       setCarreras(data);
       setError(null);
     } catch (err) {
@@ -84,38 +195,41 @@ export const CareerListPage = ({ userRiasec = [] }) => {
     }
   };
 
-  // Fetch universidades
   const fetchUniversities = async () => {
     setLoading(true);
+    setRiasecWarning(null);
     try {
-      // Traigo todas las universidades
       let data = await universityService.getAllPublic();
-
-      // Filtrar por frontend (tipo_gestion y nivel)
-      if (uniFilters.tipo_gestion) {
+      if (uniFilters.tipo_gestion)
         data = data.filter((u) => u.tipo_gestion === uniFilters.tipo_gestion);
-      }
-      if (uniFilters.nivel) {
+      if (uniFilters.nivel)
         data = data.filter((u) => u.nivel === uniFilters.nivel);
-      }
 
-      // Filtrar RIASEC si corresponde
-      if (onlyRiasec && userRiasec.length > 0) {
-        const filtered = await Promise.all(
-          data.map(async (uni) => {
-            const uniCarreras = await careerService.getAllPublic({
-              universidadId: uni.id,
-            });
-            const match = uniCarreras.some((c) => {
-              const riasec = JSON.parse(c.perfiles_riasec_compatibles || "[]");
-              return riasec.some((r) => userRiasec.includes(r));
-            });
-            return match ? uni : null;
-          })
-        );
-        data = filtered.filter(Boolean);
+      if (onlyRiasec) {
+        if (!userRiasec || userRiasec.length === 0) {
+          setRiasecWarning(
+            "No se detectaron resultados para filtrar universidades."
+          );
+          data = [];
+        } else {
+          const filtered = await Promise.all(
+            data.map(async (uni) => {
+              try {
+                const uniCarreras = await careerService.getAllPublic({
+                  universidadId: uni.id,
+                });
+                const match = uniCarreras.some((c) =>
+                  checkRiasecMatch(c.perfiles_riasec_compatibles, userRiasec)
+                );
+                return match ? uni : null;
+              } catch (err) {
+                return null;
+              }
+            })
+          );
+          data = filtered.filter(Boolean);
+        }
       }
-
       setUniversidades(data);
       setError(null);
     } catch (err) {
@@ -127,7 +241,6 @@ export const CareerListPage = ({ userRiasec = [] }) => {
     }
   };
 
-  // useEffect separado según vista
   useEffect(() => {
     if (showUniversities) {
       fetchUniversities();
@@ -135,20 +248,16 @@ export const CareerListPage = ({ userRiasec = [] }) => {
       fetchCareers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values, uniFilters, showUniversities, onlyRiasec]);
+  }, [
+    values,
+    uniFilters,
+    showUniversities,
+    onlyRiasec,
+    JSON.stringify(userRiasec),
+  ]);
 
   const handleCareerClick = (careerId) => navigate(`/carreras/${careerId}`);
   const handleUniversityClick = (uniId) => navigate(`/universidades/${uniId}`);
-
-  const formatRiasec = (riasecJson) => {
-    if (!riasecJson) return [];
-    try {
-      const parsed = JSON.parse(riasecJson);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
-  };
 
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
@@ -156,36 +265,51 @@ export const CareerListPage = ({ userRiasec = [] }) => {
         Explorá Carreras y Universidades
       </h1>
 
-      {/* Switches */}
       <div className="flex justify-center gap-4 mb-6">
         <button
-          className={`px-4 py-2 rounded-lg font-semibold ${
-            showUniversities ? "bg-gray-200" : "bg-teal-600 text-white"
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+            !showUniversities
+              ? "bg-teal-600 text-white"
+              : "bg-gray-200 text-gray-700"
           }`}
           onClick={() => setShowUniversities(false)}
         >
           Carreras
         </button>
         <button
-          className={`px-4 py-2 rounded-lg font-semibold ${
-            showUniversities ? "bg-teal-600 text-white" : "bg-gray-200"
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+            showUniversities
+              ? "bg-teal-600 text-white"
+              : "bg-gray-200 text-gray-700"
           }`}
           onClick={() => setShowUniversities(true)}
         >
           Universidades
         </button>
         <button
-          className={`px-4 py-2 rounded-lg font-semibold ${
-            onlyRiasec ? "bg-teal-600 text-white" : "bg-gray-200"
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors border-2 ${
+            onlyRiasec
+              ? "bg-teal-100 text-teal-800 border-teal-500"
+              : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"
           }`}
           onClick={() => setOnlyRiasec(!onlyRiasec)}
         >
-          Solo resultados RIASEC
+          {onlyRiasec ? "Filtro RIASEC Activo ✓" : "Solo resultados RIASEC"}
         </button>
       </div>
 
+      {onlyRiasec && riasecWarning && (
+        <div className="max-w-2xl mx-auto mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">{riasecWarning}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Filtros */}
+        {/* FILTROS */}
         <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg h-fit sticky top-24">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">Filtros</h2>
           <div className="space-y-4">
@@ -283,10 +407,19 @@ export const CareerListPage = ({ userRiasec = [] }) => {
           </div>
         </div>
 
-        {/* Resultados */}
+        {/* RESULTADOS */}
         <div className="lg:col-span-3">
-          {loading && <p className="text-center text-gray-500">Cargando...</p>}
-          {error && <p className="text-center text-red-500">{error}</p>}
+          {loading && (
+            <div className="flex justify-center py-10">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+            </div>
+          )}
+
+          {error && (
+            <p className="text-center text-red-500 bg-red-50 p-4 rounded-lg">
+              {error}
+            </p>
+          )}
 
           <div className="grid gap-6 md:grid-cols-2">
             {!loading &&
@@ -295,7 +428,7 @@ export const CareerListPage = ({ userRiasec = [] }) => {
                 <div
                   key={carrera.id}
                   onClick={() => handleCareerClick(carrera.id)}
-                  className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all cursor-pointer"
+                  className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all cursor-pointer hover:-translate-y-1"
                 >
                   <h3 className="text-xl font-bold text-gray-900 mb-1">
                     {carrera.nombre}
@@ -330,14 +463,14 @@ export const CareerListPage = ({ userRiasec = [] }) => {
                     {carrera.descripcion}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                    <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
+                    <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full border border-indigo-200">
                       {carrera.tipo}
                     </span>
-                    <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded-full">
+                    <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded-full border border-teal-200">
                       {carrera.duracion_anios} Años
                     </span>
                     {carrera.perfiles_riasec_compatibles && (
-                      <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                      <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full border border-purple-200">
                         {formatRiasec(carrera.perfiles_riasec_compatibles).join(
                           ", "
                         )}
@@ -345,15 +478,15 @@ export const CareerListPage = ({ userRiasec = [] }) => {
                     )}
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-100 text-right">
-                    <a
-                      href={carrera.link_inscripcion}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-teal-600 hover:underline font-semibold"
+                    <button
+                      className="text-teal-600 hover:text-teal-800 font-semibold text-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(carrera.link_inscripcion, "_blank");
+                      }}
                     >
-                      Sitio Web &rarr;
-                    </a>
+                      Ver Sitio Web &rarr;
+                    </button>
                   </div>
                 </div>
               ))}
@@ -364,40 +497,63 @@ export const CareerListPage = ({ userRiasec = [] }) => {
                 <div
                   key={uni.id}
                   onClick={() => handleUniversityClick(uni.id)}
-                  className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all cursor-pointer"
+                  className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all cursor-pointer hover:-translate-y-1"
                 >
-                  {uni.logo_url ? (
-                    <img
-                      src={uni.logo_url}
-                      alt={uni.alias}
-                      className="w-12 h-12 rounded-full mb-2 object-cover border border-gray-200"
-                      onError={(e) => (e.target.style.display = "none")}
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full mb-2 bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xs border border-teal-200">
-                      {uni.alias ? uni.alias.substring(0, 2) : "U"}
+                  <div className="flex items-center mb-4">
+                    {uni.logo_url ? (
+                      <img
+                        src={uni.logo_url}
+                        alt={uni.alias}
+                        className="w-16 h-16 rounded-full object-cover border border-gray-200"
+                        onError={(e) => (e.target.style.display = "none")}
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xl border border-teal-200">
+                        {uni.alias ? uni.alias.substring(0, 2) : "U"}
+                      </div>
+                    )}
+                    <div className="ml-4">
+                      <h3 className="text-lg font-bold text-gray-900 leading-tight">
+                        {uni.nombre}
+                      </h3>
+                      <p className="text-sm text-gray-500">{uni.provincia}</p>
                     </div>
-                  )}
-                  <h3 className="text-lg font-bold text-gray-900">
-                    {uni.nombre}
-                  </h3>
-                  <p className="text-sm text-gray-500">{uni.provincia}</p>
-                  <p className="text-xs text-gray-600 mt-2">
-                    Tipo: {uni.tipo_gestion}
-                  </p>
-                  {uni.nivel && (
-                    <p className="text-xs text-gray-600">Nivel: {uni.nivel}</p>
-                  )}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <span className="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded">
+                      {uni.tipo_gestion}
+                    </span>
+                    {uni.nivel && (
+                      <span className="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded">
+                        {uni.nivel}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
           </div>
-
           {!loading &&
+            !error &&
             ((showUniversities && universidades.length === 0) ||
               (!showUniversities && carreras.length === 0)) && (
-              <p className="text-center text-gray-500 p-8">
-                No se encontraron resultados.
-              </p>
+              <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-100">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p className="mt-4 text-lg text-gray-500">
+                  No se encontraron resultados.
+                </p>
+              </div>
             )}
         </div>
       </div>
