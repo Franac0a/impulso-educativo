@@ -2,10 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate, Link } from "react-router";
 import { useForm } from "../hooks/useForm";
 import { useAuth } from "../context/AuthContext";
-// ⚠️ Ya no necesitamos authService aquí
 
-// Validación (con los campos del mockup)
-// ... (validateRegister se mantiene igual)
 const validateRegister = (values) => {
   const errors = {};
   if (!values.firstName) errors.firstName = "El nombre es requerido";
@@ -19,9 +16,7 @@ const validateRegister = (values) => {
   return errors;
 };
 
-// ⚠️ Usamos export nombrado
 export const RegisterStudentForm = () => {
-  // ⚠️ CAMBIO: Sacamos 'login' y traemos 'register'
   const { register, isAuthenticated, userType } = useAuth();
   const navigate = useNavigate();
 
@@ -33,26 +28,21 @@ export const RegisterStudentForm = () => {
     confirmPassword: "",
   });
 
-  // Redirige si el usuario ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
       navigate(userType === "universidad" ? "/dashboard" : "/");
     }
   }, [isAuthenticated, navigate, userType]);
 
-  // ⚠️ CAMBIO: El 'handleRegister' ahora es mucho más simple
   const handleRegister = async (formData) => {
     try {
-      // 1. Preparamos los datos
       const dataToSend = {
-        name: `${formData.firstName} ${formData.lastName}`, // El backend espera 'name'
+        name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password,
-        type: "estudiante", // Hardcodeamos el tipo
+        type: "estudiante",
       };
 
-      // 2. Llamamos a la función 'register' del CONTEXTO
-      // (Esta función se encarga de registrar Y loguear)
       await register(dataToSend);
     } catch (error) {
       setErrors({ api: error.message || "Error en el registro." });

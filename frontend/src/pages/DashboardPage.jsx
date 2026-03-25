@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-// ⚠️ DESCOMENTA TUS IMPORTS REALES:
 import { useAuth } from "../context/AuthContext";
 import { universityService } from "../services/university.service";
 
 export const DashboardPage = () => {
-  // Mocks para vista previa (Borrar en tu proyecto)
   const { user } = useAuth();
   const [institution, setInstitution] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Verificamos si el perfil de la institución ya existe
   useEffect(() => {
     const fetchInstitution = async () => {
       try {
@@ -35,7 +32,6 @@ export const DashboardPage = () => {
     );
   }
 
-  // --- CASO 1: EL PERFIL NO EXISTE (ONBOARDING) ---
   if (!institution) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -85,7 +81,6 @@ export const DashboardPage = () => {
     );
   }
 
-  // --- CASO 2: EL PERFIL EXISTE (DASHBOARD) ---
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-20">
       {/* HEADER DASHBOARD */}

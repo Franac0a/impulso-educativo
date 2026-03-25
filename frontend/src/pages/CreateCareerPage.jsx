@@ -5,7 +5,6 @@ import { useForm } from "../hooks/useForm";
 import { universityService } from "../services/university.service";
 import { careerService } from "../services/career.service";
 
-// Opciones para los <select>
 const tiposDeCarrera = ["Grado", "Tecnicatura", "Posgrado"];
 const areasDeEstudio = [
   "Tecnología",
@@ -39,7 +38,6 @@ export const CreateCareerPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 🟢 ESTADO NUEVO: Controla si se muestra la ayuda del RIASEC
   const [showRiasecHelp, setShowRiasecHelp] = useState(false);
 
   const { values, errors, setErrors, handleChange, handleSubmit, resetForm } =
@@ -52,7 +50,6 @@ export const CreateCareerPage = () => {
       perfiles_riasec_compatibles: "",
     });
 
-  // 1. Verificar Institución
   useEffect(() => {
     const fetchInstitution = async () => {
       try {
@@ -60,7 +57,7 @@ export const CreateCareerPage = () => {
         setInstitutionId(response.institucion.id);
       } catch (err) {
         setError(
-          "No encontramos el perfil de tu institución. Debes crearlo antes de publicar carreras."
+          "No encontramos el perfil de tu institución. Debes crearlo antes de publicar carreras.",
         );
       } finally {
         setLoading(false);
@@ -105,7 +102,6 @@ export const CreateCareerPage = () => {
     );
   }
 
-  // --- RENDER: ERROR (NO INSTITUCIÓN) ---
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

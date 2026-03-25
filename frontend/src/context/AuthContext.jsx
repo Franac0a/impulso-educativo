@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
   const saveVocationalResult = async (riasecProfile) => {
     try {
       const response = await userService.saveVocationalResult(riasecProfile);
-      // Actualizamos el usuario con el nuevo resultado
+
       setUser((prev) => ({ ...prev, riasecProfile: response.riasecProfile }));
       return response;
     } catch (error) {
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
 
   const resetVocationalResult = async () => {
     try {
-      const response = await userService.saveVocationalResult(null); // reiniciamos el campo
+      const response = await userService.saveVocationalResult(null); // reinicio en el campo
       setUser((prev) => ({ ...prev, riasecProfile: null }));
       return response;
     } catch (error) {
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         userType: user?.type || null,
         saveVocationalResult,
-        resetVocationalResult, // <-- nuevo
+        resetVocationalResult,
       }}
     >
       {!loading && children}

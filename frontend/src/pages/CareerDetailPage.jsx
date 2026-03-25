@@ -1,4 +1,3 @@
-// src/pages/CareerDetailPage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { careerService } from "../services/career.service";

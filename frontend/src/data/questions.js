@@ -1,5 +1,3 @@
-// src/data/questions.js
-
 const questions = [
   // BLOQUE R - Realista
   {

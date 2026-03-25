@@ -1,6 +1,5 @@
 import React from "react";
 
-// Íconos SVG para las tarjetas (mejor que imágenes externas)
 const TargetIcon = () => (
   <svg
     className="w-12 h-12 text-teal-600"
@@ -102,7 +101,6 @@ export const AboutSection = () => {
             </p>
           </div>
           <div>
-            {/* ⚠️ Reemplazá esto por una foto tuya si querés, o dejá la de placeholder */}
             <img
               src="./public/persona_frustrada.jpg"
               alt="Estudiantes buscando información"
@@ -111,9 +109,7 @@ export const AboutSection = () => {
           </div>
         </div>
 
-        {/* Sección 2: Misión, Visión y Valores (Tu Mockup) */}
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Card: Misión */}
           <div className="bg-gray-50 rounded-lg shadow-lg p-8 text-center flex flex-col items-center">
             <div className="bg-teal-100 rounded-full p-4">
               <TargetIcon />
@@ -128,7 +124,6 @@ export const AboutSection = () => {
             </p>
           </div>
 
-          {/* Card: Visión */}
           <div className="bg-gray-50 rounded-lg shadow-lg p-8 text-center flex flex-col items-center">
             <div className="bg-teal-100 rounded-full p-4">
               <EyeIcon />
@@ -142,7 +137,6 @@ export const AboutSection = () => {
             </p>
           </div>
 
-          {/* Card: Valores */}
           <div className="bg-gray-50 rounded-lg shadow-lg p-8 text-center flex flex-col items-center">
             <div className="bg-yellow-100 rounded-full p-4">
               <HeartIcon />

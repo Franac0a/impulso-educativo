@@ -290,7 +290,6 @@ export const CareerListPage = ({ userRiasec: propUserRiasec }) => {
       )}
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* --- SIDEBAR FILTROS --- */}
         <div className="lg:col-span-1">
           <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 sticky top-28">
             <h2 className="text-lg font-bold mb-5 text-gray-800 flex items-center gap-2">

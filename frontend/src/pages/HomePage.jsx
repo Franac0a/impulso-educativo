@@ -1,18 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
-// ⚠️ INSTRUCCIÓN: Descomenta tus imports reales
+
 import { useAuth } from "../context/AuthContext";
 import { AboutSection } from "../components/AboutSection";
 
 export const HomePage = () => {
-  // Mock del hook para la vista previa (Bórralo y usa el real)
   const { isAuthenticated, user } = useAuth();
 
   return (
     <div className="min-h-screen font-sans text-gray-800">
-      {/* --- HERO SECTION (Bienvenida) --- */}
       <div className="relative bg-gradient-to-br from-indigo-50 via-white to-teal-50 overflow-hidden">
-        {/* Elementos decorativos de fondo (burbujas) */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-teal-100 blur-3xl opacity-30"></div>
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-indigo-100 blur-3xl opacity-30"></div>
 

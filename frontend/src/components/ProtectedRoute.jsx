@@ -1,12 +1,9 @@
-// src/components/ProtectedRoute.jsx
-import React from "react";
 import { Navigate, Outlet } from "react-router";
 import { useAuth } from "../context/AuthContext";
 
 export function ProtectedRoute() {
   const { user, loading } = useAuth();
 
-  // Mientras verifica el estado, mostramos un cargando
   if (loading) return <h1>Cargando...</h1>;
 
   // Si no está autenticado, redirige a la página de Login

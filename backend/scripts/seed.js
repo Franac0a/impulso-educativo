@@ -1,17 +1,16 @@
-// Cargar relaciones (muy importante)
+// cargar relaciones
 import "../src/models/index.js";
 
-// --- Importaciones ---
+// importaciones
 import { sequelize } from "../src/config/database.js";
 import { UniversidadModel } from "../src/models/universidades.model.js";
 import { CarreraModel } from "../src/models/carreras.model.js";
 import { UserModel } from "../src/models/user.model.js";
 import { InscripcionModel } from "../src/models/inscripcion.model.js";
-// import {logo.jpg} from '../../frontend/src/assets/img/logo.jpg.js';
 
-// --- Datos de Ejemplo ---
+// datos de prueba
 
-// 1. Universidades (¡TODAS VERIFICADAS PARA MOSTRAR CARRERAS!)
+// 1. universidades
 const universidadesData = [
   {
     nombre: "Universidad Tecnológica Nacional - FRRF",
@@ -20,8 +19,7 @@ const universidadesData = [
     provincia: "Formosa",
     sitio_web: "https://www.frre.utn.edu.ar/",
     userId: 1,
-    isVerified: true, // <--- CAMBIO: Aprobada en el seed
-    // Puedes agregar logo_url aquí si lo deseas para probar las imágenes
+    isVerified: true,
     logo_url:
       "https://upload.wikimedia.org/wikipedia/commons/6/67/UTN_logo.jpg",
     nivel: "Universitario",
@@ -33,7 +31,7 @@ const universidadesData = [
     provincia: "Formosa",
     sitio_web: "https://www.unf.edu.ar/",
     userId: 1,
-    isVerified: true, // <--- CAMBIO: Aprobada en el seed
+    isVerified: true,
     logo_url:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/UNaFLogoI.jpg/330px-UNaFLogoI.jpg",
     nivel: "Universitario",
@@ -43,21 +41,20 @@ const universidadesData = [
     alias: "IPF",
     tipo_gestion: "Pública",
     provincia: "Formosa",
-    sitio_web: "https://www.ipf.edu.ar/", // Revisa si esta URL es correcta
+    sitio_web: "https://www.ipf.edu.ar/",
     userId: 1,
-    isVerified: true, // <--- CAMBIO: Aprobada en el seed
+    isVerified: true,
     logo_url: "https://www.ipf.edu.ar/img/logo_institucional.jpg",
     nivel: "Tecnicatura",
   },
-  // --- NUEVAS INSTITUCIONES ---
   {
     nombre: 'Instituto Superior de Formación Docente "Félix Atilio Cabrera"',
-    alias: "ISFDAC", // O "Macedo Martínez" si prefieres
+    alias: "ISFDAC",
     tipo_gestion: "Pública",
     provincia: "Formosa",
-    sitio_web: "hhttps://isfdcytcabrera-for.infd.edu.ar/sitio/", // Revisa si esta URL es correcta
+    sitio_web: "hhttps://isfdcytcabrera-for.infd.edu.ar/sitio/",
     userId: 1,
-    isVerified: true, // <--- CAMBIO: Aprobada en el seed
+    isVerified: true,
     logo_url:
       "https://isfdcytcabrera-for.infd.edu.ar/sitio/wp-content/uploads/2021/03/PNG.png",
     nivel: "Terciario",
@@ -67,27 +64,22 @@ const universidadesData = [
     alias: "UCP",
     tipo_gestion: "Privada",
     provincia: "Formosa",
-    sitio_web: "https://www.ucp.edu.ar/sedes/formosa/", // Revisa si esta URL es correcta
+    sitio_web: "https://www.ucp.edu.ar/sedes/formosa/",
     userId: 1,
-    isVerified: true, // <--- CAMBIO: Aprobada en el seed
+    isVerified: true,
     logo_url:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR326rsQqrewpy4Nvxqb27Zs0cNsp6asFvyzg&s",
     nivel: "Universitario",
   },
 ];
 
-// --- Función para sembrar ---
-
+// funcion para sembrar datos
 const sembrarDatos = async () => {
   try {
-    // 0. Desactivar y Reactivar Foreign Key Checks
     console.log("Desactivando FOREIGN_KEY_CHECKS...");
     await sequelize.query("SET FOREIGN_KEY_CHECKS = 0", { raw: true });
 
-    // Sincronizar BD (¡CON force: true BORRA TODO!)
     console.log("Sincronizando base de datos... (force: true)");
-    // IMPORTANTE: DEBES DESCOMENTAR LA SIGUIENTE LÍNEA PARA APLICAR EL CAMBIO
-    // EN LA BASE DE DATOS Y LUEGO VOLVER A COMENTARLA.
     await sequelize.sync({ force: true });
     console.log("¡Tablas borradas y recreadas con la nueva estructura!");
 
@@ -96,29 +88,28 @@ const sembrarDatos = async () => {
 
     console.log("Conectado a la base de datos...");
 
-    // --- 1. Crear usuario Admin (si no existe) ---
-    // Nota: Al usar force: true, el usuario se borra, así que siempre se creará.
+    // 1. usuario admin
     console.log("Creando usuario admin de ejemplo...");
     let adminUser = await UserModel.create({
       id: 1,
       name: "Admin Impulso",
       email: "admin@impulso.com",
-      password: "admin123", // Hashear en producción
+      password: "admin123",
       type: "admin",
     });
 
-    // --- 2. Insertar Universidades ---
+    // 2. universidades
     console.log("Insertando universidades...");
     await UniversidadModel.bulkCreate(universidadesData, {
       ignoreDuplicates: true,
     });
 
-    // --- Obtener IDs después de crear ---
     const uniInstances = await UniversidadModel.findAll({
       where: {
         alias: universidadesData.map((u) => u.alias),
       },
     });
+
     const getIdByAlias = (alias) => {
       const found = uniInstances.find((u) => u.alias === alias);
       if (!found) throw new Error("No se encontró ID para ${alias}");
@@ -130,18 +121,17 @@ const sembrarDatos = async () => {
     const ipfId = getIdByAlias("IPF");
     const isfdacId = getIdByAlias("ISFDAC");
     const ucpId = getIdByAlias("UCP");
-    // --- Fin obtener IDs ---
 
-    // --- 3. Datos de Carreras (¡ACTUALIZADOS A RIASEC!) ---
+    // 3. carreras
     const carrerasData = [
-      // UTN
+      // utn
       {
         nombre: "Tecnicatura Superior en Programación",
         descripcion: "Forma programadores para el desarrollo de software.",
         tipo: "Tecnicatura",
         area_estudio: "Tecnología",
         duracion_anios: 2,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "E", "C"]), // Investigador, Realista, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["S", "E", "C"]),
         universidadId: utnId,
       },
       {
@@ -150,17 +140,17 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Ciencias Exactas",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["R", "I"]), // Realista, Investigador
+        perfiles_riasec_compatibles: JSON.stringify(["R", "I"]),
         universidadId: utnId,
       },
-      // UNaF
+      // unaf
       {
         nombre: "Licenciatura en Sistemas",
         descripcion: "Formación integral en análisis y desarrollo de sistemas.",
         tipo: "Grado",
         area_estudio: "Tecnología",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["I", "C", "R"]), // Investigador, Convencional, Realista
+        perfiles_riasec_compatibles: JSON.stringify(["I", "C", "R"]),
         universidadId: unafId,
       },
       {
@@ -169,10 +159,10 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Salud",
         duracion_anios: 4,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "E"]), // Social, Realista, Investigador
+        perfiles_riasec_compatibles: JSON.stringify(["S", "E"]),
         universidadId: unafId,
       },
-      // IPF
+      // ipf
       {
         nombre:
           "Tecnicatura Superior en Desarrollo de Software Multiplataforma",
@@ -180,17 +170,17 @@ const sembrarDatos = async () => {
         tipo: "Tecnicatura",
         area_estudio: "Tecnología",
         duracion_anios: 3,
-        perfiles_riasec_compatibles: JSON.stringify(["I", "R", "C"]), // Investigador, Realista, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["I", "R", "C"]),
         universidadId: ipfId,
       },
-      // UNaF (Añadidas)
+      // unaf
       {
         nombre: "Licenciatura en Comercio Exterior",
         descripcion: "Gestión de operaciones comerciales internacionales.",
         tipo: "Grado",
         area_estudio: "Ciencias Sociales",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["E", "C", "S"]), // Emprendedor, Convencional, Social
+        perfiles_riasec_compatibles: JSON.stringify(["E", "C", "S"]),
         universidadId: unafId,
       },
       {
@@ -200,7 +190,7 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Ciencias Exactas",
         duracion_anios: 4,
-        perfiles_riasec_compatibles: JSON.stringify(["E", "S"]), // Investigador, Social
+        perfiles_riasec_compatibles: JSON.stringify(["E", "S"]),
         universidadId: unafId,
       },
       {
@@ -209,7 +199,7 @@ const sembrarDatos = async () => {
         tipo: "Tecnicatura",
         area_estudio: "Ciencias Sociales",
         duracion_anios: 3,
-        perfiles_riasec_compatibles: JSON.stringify(["R", "E", "C"]), // Realista, Emprendedor, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["R", "E", "C"]),
         universidadId: unafId,
       },
       {
@@ -219,17 +209,17 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Humanidades",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "I", "A"]), // Social, Investigador, Artístico
+        perfiles_riasec_compatibles: JSON.stringify(["S", "I", "A"]),
         universidadId: unafId,
       },
-      // UTN-FRRe (Asociadas a UTN Formosa)
+      // utn
       {
         nombre: "Ingeniería Química",
         descripcion: "Diseño y operación de procesos industriales químicos.",
         tipo: "Grado",
         area_estudio: "Ciencias Exactas",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["I", "R"]), // Investigador, Realista
+        perfiles_riasec_compatibles: JSON.stringify(["I", "R"]),
         universidadId: utnId,
       },
       {
@@ -239,10 +229,10 @@ const sembrarDatos = async () => {
         tipo: "Tecnicatura",
         area_estudio: "Tecnología",
         duracion_anios: 3,
-        perfiles_riasec_compatibles: JSON.stringify(["R", "I", "C"]), // Realista, Investigador, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["R", "I", "C"]),
         universidadId: utnId,
       },
-      // IPF (Añadidas)
+      // ipf
       {
         nombre: "Tecnicatura Superior en Energías Renovables",
         descripcion:
@@ -250,7 +240,7 @@ const sembrarDatos = async () => {
         tipo: "Tecnicatura",
         area_estudio: "Tecnología",
         duracion_anios: 3,
-        perfiles_riasec_compatibles: JSON.stringify(["E", "I"]), // Realista, Investigador
+        perfiles_riasec_compatibles: JSON.stringify(["E", "I"]),
         universidadId: ipfId,
       },
       {
@@ -259,19 +249,17 @@ const sembrarDatos = async () => {
         tipo: "Tecnicatura",
         area_estudio: "Tecnología",
         duracion_anios: 3,
-        perfiles_riasec_compatibles: JSON.stringify(["R", "I", "C"]), // Realista, Investigador, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["R", "I", "C"]),
         universidadId: ipfId,
       },
-
-      // --- ISFDAC y UCP (¡ACTUALIZADAS A RIASEC!) ---
-      // ISFDAC
+      // isfdac
       {
         nombre: "Profesorado de Educación Primaria",
         descripcion: "Formación docente para el nivel primario.",
         tipo: "Grado",
         area_estudio: "Humanidades",
         duracion_anios: 4,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "E", "C"]), // Social, Artístico, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["S", "E", "C"]),
         universidadId: isfdacId,
       },
       {
@@ -280,7 +268,7 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Ciencias Exactas",
         duracion_anios: 4,
-        perfiles_riasec_compatibles: JSON.stringify(["I", "S", "C"]), // Investigador, Social, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["I", "S", "C"]),
         universidadId: isfdacId,
       },
       {
@@ -289,7 +277,7 @@ const sembrarDatos = async () => {
         tipo: "Tecnicatura",
         area_estudio: "Humanidades",
         duracion_anios: 3,
-        perfiles_riasec_compatibles: JSON.stringify(["C", "S", "E"]), // Convencional, Social, Artístico
+        perfiles_riasec_compatibles: JSON.stringify(["C", "S", "E"]),
         universidadId: isfdacId,
       },
       {
@@ -299,10 +287,10 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Humanidades",
         duracion_anios: 4,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "A", "I"]), // Social, Artístico, Investigador
+        perfiles_riasec_compatibles: JSON.stringify(["S", "A", "I"]),
         universidadId: isfdacId,
       },
-      // UCP
+      // ucp
       {
         nombre: "Abogacía",
         descripcion:
@@ -310,7 +298,7 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Ciencias Sociales",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["E", "I", "C"]), // Emprendedor, Investigador, Convencional
+        perfiles_riasec_compatibles: JSON.stringify(["E", "I", "C"]),
         universidadId: ucpId,
       },
       {
@@ -320,7 +308,7 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Salud",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "I", "A"]), // Social, Investigador, Artístico
+        perfiles_riasec_compatibles: JSON.stringify(["S", "I", "A"]),
         universidadId: ucpId,
       },
       {
@@ -330,7 +318,7 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Ciencias Sociales",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["C", "E"]), // Convencional, Emprendedor
+        perfiles_riasec_compatibles: JSON.stringify(["C", "E"]),
         universidadId: ucpId,
       },
       {
@@ -339,18 +327,17 @@ const sembrarDatos = async () => {
         tipo: "Grado",
         area_estudio: "Salud",
         duracion_anios: 5,
-        perfiles_riasec_compatibles: JSON.stringify(["S", "E"]), // Social, Investigador
+        perfiles_riasec_compatibles: JSON.stringify(["S", "E"]),
         universidadId: ucpId,
       },
     ];
 
-    // --- 4. Insertar Carreras ---
     console.log("Insertando carreras...");
     await CarreraModel.bulkCreate(carrerasData, { ignoreDuplicates: true });
 
     console.log("---------------------------------");
     console.log(
-      "¡Base de datos sembrada con éxito! (${carrerasData.length} carreras con perfiles RIASEC). Todas las universidades del seed están verificadas."
+      "¡Base de datos sembrada con éxito! (${carrerasData.length} carreras con perfiles RIASEC). Todas las universidades del seed están verificadas.",
     );
     console.log("---------------------------------");
   } catch (error) {
@@ -364,5 +351,4 @@ const sembrarDatos = async () => {
   }
 };
 
-// --- Ejecutamos la función ---
 sembrarDatos();

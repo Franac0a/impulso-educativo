@@ -2,14 +2,12 @@ import React from "react";
 import { Link } from "react-router";
 
 export const Footer = () => {
-  // Función para el año actual
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className="bg-teal-700 text-green-100">
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Columna 1: Logo y Descripción */}
           <div>
             <Link to="/" className="text-2xl font-bold text-white">
               Impulso Educativo
@@ -20,7 +18,6 @@ export const Footer = () => {
             </p>
           </div>
 
-          {/* Columna 2: Navegación */}
           <div>
             <h3 className="text-lg font-semibold text-white uppercase tracking-wider">
               Navegación
@@ -37,7 +34,6 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                {/* (Links de relleno que tenías en la navbar) */}
                 <span className="text-teal-200 cursor-not-allowed">
                   Servicios
                 </span>
@@ -50,13 +46,11 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Columna 3: Legal/Contacto */}
           <div>
             <h3 className="text-lg font-semibold text-white uppercase tracking-wider">
               Soporte
             </h3>
             <ul className="mt-4 space-y-2">
-              {/* ¡Aquí está el link que pediste! */}
               <li>
                 <Link to="/contacto" className="hover:text-white">
                   Contacto
@@ -75,13 +69,11 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Columna 4: Redes Sociales */}
           <div>
             <h3 className="text-lg font-semibold text-white uppercase tracking-wider">
               Redes Sociales
             </h3>
             <div className="flex space-x-4 mt-4">
-              {/* Íconos SVG de tu mockup de contacto */}
               <a
                 href="#"
                 className="text-teal-100 hover:text-white"

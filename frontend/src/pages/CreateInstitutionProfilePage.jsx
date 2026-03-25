@@ -1,12 +1,9 @@
-import React from "react";
 import { useNavigate } from "react-router";
 import { useForm } from "../hooks/useForm";
 import { universityService } from "../services/university.service";
 
-// Opciones para el <select>
 const tiposDeGestion = ["Pública", "Privada"];
 
-// Validación (basada en tu modelo de universidad)
 const validateProfile = (values) => {
   const errors = {};
   if (!values.nombre) errors.nombre = "El nombre es requerido";
@@ -22,22 +19,18 @@ export const CreateInstitutionProfilePage = () => {
     nombre: "",
     alias: "",
     tipo_gestion: "Pública",
-    provincia: "Formosa", // Valor por defecto
+    provincia: "Formosa",
     sitio_web: "",
   });
 
   const handleCreateProfile = async (formData) => {
     try {
-      // El backend (crearUniversidad) toma el userId del token (req.usuario.id)
       await universityService.createInstitution(formData);
 
-      // ¡Éxito!
       alert("¡Perfil de institución creado exitosamente!");
 
-      // Ahora que el perfil SÍ existe, lo mandamos a crear la carrera
       navigate("/dashboard/crear-carrera");
     } catch (err) {
-      // Manejamos el error (ej: "Ya existe una universidad para este usuario.")
       setErrors({ api: err.message || "Error al crear el perfil." });
     }
   };

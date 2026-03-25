@@ -3,26 +3,22 @@ import { useNavigate, Link } from "react-router";
 import { useForm } from "../hooks/useForm";
 import { useAuth } from "../context/AuthContext";
 
-// ⚠️ Usamos export nombrado
 export const RegisterUniversityForm = () => {
   const { register, isAuthenticated, userType } = useAuth();
   const navigate = useNavigate();
 
-  // Estado para el toggle de contraseña (opcional, pero útil)
   const [showPassword, setShowPassword] = useState(false);
 
   const { values, errors, handleChange, handleSubmit, setErrors } = useForm({
-    // Nuevos campos del mockup
-    firstName: "", // Nombre (del responsable)
-    lastName: "", // Apellido (del responsable)
-    email: "", // Correo electrónico (laboral)
+    firstName: "",
+    lastName: "",
+    email: "",
     password: "",
     confirmPassword: "",
-    // tipo_documento: '', // 👈 SACADO
-    terms: false, // Checkbox
+
+    terms: false,
   });
 
-  // Validación actualizada al nuevo mockup
   const validateRegister = (values) => {
     const errors = {};
     if (!values.firstName) errors.firstName = "El nombre es requerido";
@@ -32,35 +28,27 @@ export const RegisterUniversityForm = () => {
     if (values.password.length < 8) errors.password = "Mínimo 8 caracteres";
     if (values.password !== values.confirmPassword)
       errors.confirmPassword = "Las contraseñas no coinciden";
-    // if (!values.tipo_documento) errors.tipo_documento = "Seleccione un tipo de documento"; // 👈 SACADO
+
     if (!values.terms) errors.terms = "Debe aceptar los términos y condiciones";
     return errors;
   };
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard"); // Si ya está logueado, al dashboard
+      navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
 
   const handleRegister = async (formData) => {
     try {
-      // 1. Preparamos los datos para el UserModel del backend
       const dataToSend = {
-        // Concatenamos nombre y apellido para el 'name' del UserModel
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password,
-        type: "universidad", // Hardcodeamos el tipo
+        type: "universidad",
       };
 
-      // 2. Llamamos a la función 'register' del CONTEXTO
-      // (Esta se encarga de registrar Y loguear)
       await register(dataToSend);
-
-      // 3. El AuthContext nos redirige (o el useEffect de arriba)
-      // Al loguearse, será redirigido a /dashboard, donde
-      // le pediremos que cree su perfil de institución.
     } catch (error) {
       setErrors({ api: error.message || "Error en el registro." });
     }
@@ -233,7 +221,6 @@ export const RegisterUniversityForm = () => {
                 errors.password ? "border-red-500" : "border-gray-300"
               }`}
             />
-            {/* (Aquí iría el ícono del ojo) */}
           </div>
           <p className="text-xs text-gray-500 mt-1">
             Mínimo 8 caracteres con números y letras.
@@ -245,7 +232,6 @@ export const RegisterUniversityForm = () => {
           )}
         </div>
 
-        {/* Confirmar Contraseña */}
         <div>
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
@@ -285,15 +271,6 @@ export const RegisterUniversityForm = () => {
           )}
         </div>
 
-        {/* --- Verificación (UI) --- */}
-
-        {/* ---------------------------------- */}
-        {/* 👈 CAMPOS DE DOCUMENTO ELIMINADOS 
-            (Tipo de Documento y Adjuntar Archivo 
-             ya no están aquí, irán en la página de "Crear Perfil")
-        /* ---------------------------------- */}
-
-        {/* Términos y Condiciones */}
         <div>
           <label className="flex items-center text-gray-600">
             <input

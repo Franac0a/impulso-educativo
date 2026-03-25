@@ -4,13 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useForm } from "../hooks/useForm";
 
-// import logoImg from "../assets/logo.png";
 const logoPlaceholder =
-  "https://cdn-icons-png.flaticon.com/512/3413/3413535.png"; // Borrar esto cuando tengas tu logo
+  "https://cdn-icons-png.flaticon.com/512/3413/3413535.png";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth(); // Asumimos que tu contexto expone una función 'login'
+  const { login } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,9 +25,8 @@ export const LoginPage = () => {
     setError(null);
 
     try {
-      // Lógica de login (ajusta según tu AuthContext)
       await login(values.email, values.password);
-      navigate("/"); // Redirigir al home o dashboard
+      navigate("/");
     } catch (err) {
       console.error(err);
       setError("Credenciales inválidas. Por favor, intenta nuevamente.");
@@ -39,7 +37,6 @@ export const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans relative overflow-hidden">
-      {/* Decoración de Fondo (Burbujas sutiles) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
         <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
@@ -47,13 +44,11 @@ export const LoginPage = () => {
       </div>
 
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 md:p-10 relative z-10 transform transition-all hover:scale-[1.01]">
-        {/* --- ESPACIO PARA EL LOGO --- */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 shadow-lg shadow-teal-500/40 mb-4 p-1">
             <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
-              {/* ⚠️ AQUÍ VA TU LOGO */}
               <img
-                src={logoPlaceholder} // Cambiar por tu variable importada (logoImg)
+                src={logoPlaceholder}
                 alt="Logo Impulso Educativo"
                 className="w-12 h-12 object-contain"
               />

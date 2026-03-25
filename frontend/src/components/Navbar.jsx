@@ -28,16 +28,11 @@ export const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* --- LOGO --- */}
           <CustomHashLink to="/#" className="flex items-center gap-3 group">
-            {/* Contenedor del Logo con Anillo de Color y Animación */}
             <div className="relative w-12 h-12 flex items-center justify-center transform group-hover:rotate-6 transition-transform duration-500">
-              {/* Fondo degradado (El anillo de color) */}
               <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 shadow-lg shadow-teal-500/40"></div>
 
-              {/* Círculo blanco interno para separar logo del borde */}
               <div className="absolute inset-[2px] rounded-full bg-white flex items-center justify-center overflow-hidden">
-                {/* TU IMAGEN DE LOGO */}
                 <img
                   src={logoUrl}
                   alt="Logo Impulso"
@@ -55,7 +50,6 @@ export const Navbar = () => {
             </span>
           </CustomHashLink>
 
-          {/* --- MENÚ ESCRITORIO --- */}
           <div className="hidden md:flex items-center space-x-8">
             <NavLink to="/#">Inicio</NavLink>
             <NavLink to="/carreras">Explorar Ofertas</NavLink>
@@ -64,7 +58,6 @@ export const Navbar = () => {
             <NavLink to="/contacto">Contacto</NavLink>
           </div>
 
-          {/* --- BOTONES DE USUARIO (Escritorio) --- */}
           <div className="hidden md:flex items-center space-x-3">
             {isAuthenticated ? (
               <>
@@ -114,7 +107,6 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* --- BOTÓN HAMBURGUESA (Móvil) --- */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -147,7 +139,6 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* --- MENÚ MÓVIL --- */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 shadow-xl absolute w-full">
           <div className="px-4 pt-2 pb-4 space-y-1 flex flex-col">
@@ -211,8 +202,6 @@ export const Navbar = () => {
     </nav>
   );
 };
-
-// --- COMPONENTES AUXILIARES ---
 
 const CustomHashLink = ({ to, children, className, onClick }) => {
   const location = useLocation();

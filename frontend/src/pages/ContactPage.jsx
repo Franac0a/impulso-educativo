@@ -1,7 +1,4 @@
-import React from "react";
-import { useForm } from "../hooks/useForm"; // Reutilizamos el hook
-
-// Un hook de formulario vacío por ahora, solo para manejar el estado
+import { useForm } from "../hooks/useForm";
 const validateContact = (values) => {
   const errors = {};
   if (!values.name) errors.name = "El nombre es requerido";
@@ -10,7 +7,6 @@ const validateContact = (values) => {
   return errors;
 };
 
-// ⚠️ Usamos export nombrado
 export const ContactPage = () => {
   const { values, errors, handleChange, handleSubmit } = useForm({
     name: "",
@@ -18,11 +14,9 @@ export const ContactPage = () => {
     message: "",
   });
 
-  // Por ahora, el submit solo muestra los datos en consola
   const handleContactSubmit = (formData) => {
     console.log("Formulario de contacto enviado:", formData);
     alert("¡Gracias por tu mensaje!");
-    // Aquí iría la lógica para enviarlo a un backend o servicio
   };
 
   const onSubmit = handleSubmit(handleContactSubmit, validateContact);
@@ -30,7 +24,6 @@ export const ContactPage = () => {
   return (
     <div className="bg-gray-50 py-16">
       <div className="container mx-auto px-6">
-        {/* Título y Subtítulo */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-teal-600">Contacto</h1>
           <p className="text-lg text-gray-600 mt-2">
@@ -39,15 +32,12 @@ export const ContactPage = () => {
           </p>
         </div>
 
-        {/* Contenedor de la Card */}
         <div className="bg-white rounded-xl shadow-xl max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 overflow-hidden">
-          {/* Columna Izquierda: Formulario */}
           <div className="p-8 md:p-12">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
               Envíanos un mensaje
             </h2>
             <form onSubmit={onSubmit} className="space-y-6">
-              {/* Campo Nombre */}
               <div>
                 <label
                   className="block text-gray-700 text-sm font-bold mb-2"
@@ -73,7 +63,6 @@ export const ContactPage = () => {
                 )}
               </div>
 
-              {/* Campo Email */}
               <div>
                 <label
                   className="block text-gray-700 text-sm font-bold mb-2"
@@ -99,7 +88,6 @@ export const ContactPage = () => {
                 )}
               </div>
 
-              {/* Campo Mensaje */}
               <div>
                 <label
                   className="block text-gray-700 text-sm font-bold mb-2"
@@ -125,13 +113,11 @@ export const ContactPage = () => {
                 )}
               </div>
 
-              {/* Botón Enviar */}
               <button
                 type="submit"
                 className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline flex items-center justify-center transition"
               >
                 Enviar
-                {/* Ícono de Enviar (SVG) */}
                 <svg
                   className="w-5 h-5 ml-2"
                   fill="currentColor"
@@ -143,7 +129,6 @@ export const ContactPage = () => {
             </form>
           </div>
 
-          {/* Columna Derecha: Información */}
           <div className="bg-teal-50 p-8 md:p-12">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
               Información de Contacto

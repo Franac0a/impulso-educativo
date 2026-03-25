@@ -5,33 +5,24 @@ import { universityService } from "../services/university.service";
 export const VerificationBanner = () => {
   const { isAuthenticated, userType } = useAuth();
 
-  // Por defecto, asumimos que está verificado (banner oculto)
   const [isVerified, setIsVerified] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Solo ejecutamos esta lógica si el usuario es una universidad logueada
     if (isAuthenticated && userType === "universidad") {
       const checkVerificationStatus = async () => {
         try {
-          // 1. Buscamos el perfil de la institución
           const response = await universityService.getMyInstitution();
 
-          // 2. Revisamos el campo 'isVerified'
-          // (Este campo lo añadiste en 'universidades.model.js')
           if (
             response.institucion &&
             response.institucion.isVerified === false
           ) {
-            // Si es 'false', activamos el banner
             setIsVerified(false);
           } else {
-            // Si es 'true' (o si no hay perfil aún), el banner no se muestra
             setIsVerified(true);
           }
         } catch (error) {
-          // Si hay un error (ej: 404 si aún no crearon el perfil),
-          // tampoco mostramos el banner.
           setIsVerified(true);
         } finally {
           setLoading(false);
@@ -40,27 +31,16 @@ export const VerificationBanner = () => {
 
       checkVerificationStatus();
     } else {
-      // Si no es una universidad, no hay nada que cargar
       setLoading(false);
       setIsVerified(true); // Oculta el banner
     }
-    // Se ejecuta cada vez que el estado de autenticación cambia
   }, [isAuthenticated, userType]);
 
-  // --- Lógica de Renderizado ---
-
-  // No mostramos nada si:
-  // 1. Está cargando
-  // 2. No es una universidad
-  // 3. Ya está verificada
   if (loading || !isAuthenticated || userType !== "universidad" || isVerified) {
     return null;
   }
 
-  // ¡Solo se muestra si es universidad Y isVerified es false!
   return (
-    // Usamos 'top-20' para que aparezca JUSTO DEBAJO de tu Navbar fija
-    // Usamos 'z-40' (Navbar tiene z-50)
     <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 fixed top-20 w-full z-40 animate-pulse">
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center">
