@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-// ⚠️ 1. IMPORTA TU LOGO AQUÍ (Asegúrate de que la ruta sea correcta)
-// Si no tienes la imagen aún, usa este link de prueba temporal:
 const logoUrl = "./public/logo.jpg";
-// En tu proyecto real sería: import logoUrl from "../assets/logo.png";
 
-// ⚠️ 2. DESCOMENTA ESTO EN TU PROYECTO Y BORRA EL MOCK DEL FINAL
 import { useAuth } from "../context/AuthContext";
 
 export const Navbar = () => {
-  // Usamos el hook real o el mock del final
   const { isAuthenticated, logout, user, userType } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Efecto Glassmorphism al hacer scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -47,7 +41,7 @@ export const Navbar = () => {
                 <img
                   src={logoUrl}
                   alt="Logo Impulso"
-                  className="w-full h-full object-cover" // object-cover hace que llene el círculo sin deformarse
+                  className="w-full h-full object-cover"
                 />
               </div>
             </div>

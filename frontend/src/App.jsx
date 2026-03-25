@@ -1,16 +1,16 @@
 import React from "react";
 import { Routes, Route } from "react-router";
 
-// Componentes de Ruteo
+//componentes de Ruteo
 import { PrivateRoutes } from "./router/PrivateRoutes";
 import { PublicRoutes } from "./router/PublicRoutes";
 
-// Componentes UI
+//componentes
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { VerificationBanner } from "./components/VerificationBanner";
 
-// Páginas
+// paginas
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
@@ -40,6 +40,8 @@ export const App = () => {
           {/* ------------------- */}
           <Route path="/" element={<HomePage />} />
           <Route path="/contacto" element={<ContactPage />} />
+          <Route path="/carreras" element={<CareerListPage />} />
+          <Route path="/carreras/:id" element={<CareerDetailPage />} />
 
           {/* ------------------- */}
           {/* --- RUTAS PÚBLICAS (Solo invitados) --- */}
@@ -53,8 +55,6 @@ export const App = () => {
           {/* --- RUTAS PRIVADAS (Cualquier usuario registrado) --- */}
           {/* ------------------- */}
           <Route element={<PrivateRoutes />}>
-            <Route path="/carreras" element={<CareerListPage />} />
-            <Route path="/carreras/:id" element={<CareerDetailPage />} />
             <Route
               path="/universidades/:id"
               element={<UniversityProfilePage />}
