@@ -34,7 +34,6 @@ export const CareerDetailPage = () => {
   if (!carrera)
     return <div className="p-10 text-center">Carrera no encontrada.</div>;
 
-  // Asegurarse de que riasecTags sea siempre un array
   let riasecTags = [];
   if (carrera.perfiles_riasec_compatibles) {
     try {
